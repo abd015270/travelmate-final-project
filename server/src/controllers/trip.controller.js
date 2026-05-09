@@ -94,10 +94,41 @@ const deleteTrip = async (req, res) => {
   }
 };
 
+const getTripStats = async (req, res) => {
+  try {
+    const stats = await Trip.aggregate([
+      {
+        $group: {
+          _id: "$category",
+          count: { $sum: 1 },
+          averagePrice: { $avg: "$price" },
+          maxPrice: { $max: "$price" },
+          minPrice: { $min: "$price" },
+        },
+      },
+      {
+        $sort: {
+          averagePrice: 1,
+        },
+      },
+      {
+        $limit: 10,
+      },
+    ]);
+
+    res.json(stats);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   createTrip,
   getTrips,
   getTripById,
   updateTrip,
   deleteTrip,
+  getTripStats,
 };

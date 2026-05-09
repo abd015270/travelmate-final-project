@@ -10,11 +10,14 @@ const {
   getTripById,
   updateTrip,
   deleteTrip,
+  getTripStats,
 } = require("../controllers/trip.controller");
 
 router.post("/", protect, createTrip);
 
 router.get("/", getTrips);
+
+router.get("/stats/summary", getTripStats);
 
 router.get("/:id", getTripById);
 
