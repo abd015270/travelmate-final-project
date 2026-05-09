@@ -6,6 +6,7 @@ const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
 const tripRoutes = require("./routes/trip.routes");
 const favoriteRoutes = require("./routes/favorite.routes");
+const bookingRoutes = require("./routes/booking.routes");
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/trips", tripRoutes);
 app.use("/api/favorites", favoriteRoutes);
+app.use("/api/bookings", bookingRoutes);
 
 app.get("/", (req, res) => {
   res.json({
