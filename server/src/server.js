@@ -1,5 +1,9 @@
 const express = require("express");
 const dotenv = require("dotenv");
+const cors = require("cors");
+const morgan = require("morgan");
+const rateLimit = require("express-rate-limit");
+
 const connectDB = require("./config/db");
 
 const authRoutes = require("./routes/auth.routes");
@@ -15,6 +19,18 @@ connectDB();
 const app = express();
 
 app.use(express.json());
+app.use(cors());
+app.use(morgan("dev"));
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: {
+    message: "too many requests, try again later",
+  },
+});
+
+app.use(limiter);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
