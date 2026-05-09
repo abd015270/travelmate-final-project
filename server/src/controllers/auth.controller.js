@@ -6,7 +6,9 @@ const register = async (req, res) => {
   try {
     const user = await User.create(req.body);
 
-    res.status(201).json(user);
+    const userWithoutPassword = await User.findById(user._id).select("-password");
+
+    res.status(201).json(userWithoutPassword);
   } catch (error) {
     res.status(400).json({
       message: error.message,
@@ -26,10 +28,7 @@ const login = async (req, res) => {
       });
     }
 
-    const isMatch = await bcrypt.compare(
-      password,
-      user.password
-    );
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.status(400).json({
@@ -49,7 +48,14 @@ const login = async (req, res) => {
 
     res.json({
       token,
-      user,
+      user: {
+        _id: user._id,
+        nationalId: user.nationalId,
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone,
+        birthDate: user.birthDate,
+      },
     });
   } catch (error) {
     res.status(500).json({
