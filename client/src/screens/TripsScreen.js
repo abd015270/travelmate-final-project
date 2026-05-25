@@ -1,4 +1,9 @@
-import { useContext, useEffect, useState } from "react";
+import {
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+
 import {
   Alert,
   FlatList,
@@ -9,12 +14,26 @@ import {
 } from "react-native";
 
 import API from "../api/api";
+
 import { AuthContext } from "../context/AuthContext";
 
-export default function TripsScreen() {
-  const { token } = useContext(AuthContext);
+import { ThemeContext } from "../context/ThemeContext";
 
-  const [trips, setTrips] = useState([]);
+import { LanguageContext } from "../context/LanguageContext";
+
+export default function TripsScreen() {
+  const { token } =
+    useContext(AuthContext);
+
+  const { colors } =
+    useContext(ThemeContext);
+
+  const { t } =
+    useContext(LanguageContext);
+
+  const [trips, setTrips] = useState(
+    []
+  );
 
   useEffect(() => {
     getTrips();
@@ -22,14 +41,18 @@ export default function TripsScreen() {
 
   const getTrips = async () => {
     try {
-      const response = await API.get("/trips");
+      const response =
+        await API.get("/trips");
+
       setTrips(response.data);
     } catch (error) {
       console.log(error.message);
     }
   };
 
-  const addFavorite = async (tripId) => {
+  const addFavorite = async (
+    tripId
+  ) => {
     try {
       await API.post(
         `/favorites/${tripId}`,
@@ -41,13 +64,21 @@ export default function TripsScreen() {
         }
       );
 
-      Alert.alert("Success", "Added to favorites");
+      Alert.alert(
+        "Success",
+        "Added to favorites"
+      );
     } catch (error) {
-      Alert.alert("Error", "Could not add favorite");
+      Alert.alert(
+        "Error",
+        "Could not add favorite"
+      );
     }
   };
 
-  const bookTrip = async (tripId) => {
+  const bookTrip = async (
+    tripId
+  ) => {
     try {
       await API.post(
         `/bookings/${tripId}`,
@@ -59,44 +90,130 @@ export default function TripsScreen() {
         }
       );
 
-      Alert.alert("Success", "Trip booked");
+      Alert.alert(
+        "Success",
+        "Trip booked"
+      );
+
       getTrips();
     } catch (error) {
-      Alert.alert("Error", "Could not book trip");
+      Alert.alert(
+        "Error",
+        "Could not book trip"
+      );
     }
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor:
+            colors.background,
+        },
+      ]}
+    >
       <FlatList
         data={trips}
-        keyExtractor={(item) => item._id}
+        keyExtractor={(item) =>
+          item._id
+        }
         renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.title}>{item.title}</Text>
-
-            <Text style={styles.text}>
-              {item.city}, {item.country}
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor:
+                  colors.card,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.title,
+                {
+                  color: colors.text,
+                },
+              ]}
+            >
+              {item.title}
             </Text>
 
-            <Text style={styles.text}>{item.description}</Text>
+            <Text
+              style={[
+                styles.text,
+                {
+                  color:
+                    colors.subText,
+                },
+              ]}
+            >
+              {item.city},{" "}
+              {item.country}
+            </Text>
 
-            <Text style={styles.price}>${item.price}</Text>
+            <Text
+              style={[
+                styles.text,
+                {
+                  color:
+                    colors.subText,
+                },
+              ]}
+            >
+              {item.description}
+            </Text>
 
-            <Text style={styles.text}>Seats: {item.availableSeats}</Text>
+            <Text style={styles.price}>
+              ${item.price}
+            </Text>
+
+            <Text
+              style={[
+                styles.text,
+                {
+                  color:
+                    colors.subText,
+                },
+              ]}
+            >
+              {t.seats}:{" "}
+              {item.availableSeats}
+            </Text>
 
             <TouchableOpacity
-              style={styles.favoriteButton}
-              onPress={() => addFavorite(item._id)}
+              style={
+                styles.favoriteButton
+              }
+              onPress={() =>
+                addFavorite(
+                  item._id
+                )
+              }
             >
-              <Text style={styles.buttonText}>Add Favorite</Text>
+              <Text
+                style={
+                  styles.buttonText
+                }
+              >
+                {t.addFavorite}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.bookButton}
-              onPress={() => bookTrip(item._id)}
+              onPress={() =>
+                bookTrip(item._id)
+              }
             >
-              <Text style={styles.buttonText}>Book Trip</Text>
+              <Text
+                style={
+                  styles.buttonText
+                }
+              >
+                {t.bookTrip}
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -109,43 +226,47 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 15,
-    backgroundColor: "#f8fafc",
   },
+
   card: {
-    backgroundColor: "white",
     padding: 18,
     borderRadius: 10,
     marginBottom: 15,
     elevation: 3,
   },
+
   title: {
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 8,
   },
+
   text: {
     fontSize: 15,
-    color: "#444",
     marginBottom: 5,
   },
+
   price: {
     fontSize: 18,
     color: "#16a34a",
     fontWeight: "bold",
     marginVertical: 6,
   },
+
   favoriteButton: {
     backgroundColor: "#f97316",
     padding: 12,
     borderRadius: 8,
     marginTop: 10,
   },
+
   bookButton: {
     backgroundColor: "#2563eb",
     padding: 12,
     borderRadius: 8,
     marginTop: 10,
   },
+
   buttonText: {
     color: "white",
     textAlign: "center",

@@ -1,13 +1,36 @@
-import { useContext, useEffect, useState } from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import {
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import API from "../api/api";
+
 import { AuthContext } from "../context/AuthContext";
 
-export default function BookingsScreen() {
-  const { token } = useContext(AuthContext);
+import { ThemeContext } from "../context/ThemeContext";
 
-  const [bookings, setBookings] = useState([]);
+import { LanguageContext } from "../context/LanguageContext";
+
+export default function BookingsScreen() {
+  const { token } =
+    useContext(AuthContext);
+
+  const { colors } =
+    useContext(ThemeContext);
+
+  const { t } =
+    useContext(LanguageContext);
+
+  const [bookings, setBookings] =
+    useState([]);
 
   useEffect(() => {
     getBookings();
@@ -15,11 +38,15 @@ export default function BookingsScreen() {
 
   const getBookings = async () => {
     try {
-      const response = await API.get("/bookings", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response =
+        await API.get(
+          "/bookings",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
       setBookings(response.data);
     } catch (error) {
@@ -28,16 +55,70 @@ export default function BookingsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor:
+            colors.background,
+        },
+      ]}
+    >
       <FlatList
         data={bookings}
-        keyExtractor={(item) => item._id}
+        keyExtractor={(item) =>
+          item._id
+        }
         renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.title}>{item.trip?.title}</Text>
-            <Text style={styles.text}>Seats: {item.seats}</Text>
-            <Text style={styles.text}>Status: {item.status}</Text>
-            <Text style={styles.price}>Total: ${item.totalPrice}</Text>
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor:
+                  colors.card,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.title,
+                {
+                  color: colors.text,
+                },
+              ]}
+            >
+              {item.trip?.title}
+            </Text>
+
+            <Text
+              style={[
+                styles.text,
+                {
+                  color:
+                    colors.subText,
+                },
+              ]}
+            >
+              {t.seats}: {item.seats}
+            </Text>
+
+            <Text
+              style={[
+                styles.text,
+                {
+                  color:
+                    colors.subText,
+                },
+              ]}
+            >
+              {t.status}:{" "}
+              {item.status}
+            </Text>
+
+            <Text style={styles.price}>
+              {t.total}: $
+              {item.totalPrice}
+            </Text>
           </View>
         )}
       />
@@ -49,23 +130,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 15,
-    backgroundColor: "#f8fafc",
   },
+
   card: {
-    backgroundColor: "white",
     padding: 18,
     borderRadius: 10,
     marginBottom: 15,
     elevation: 3,
   },
+
   title: {
     fontSize: 20,
     fontWeight: "bold",
   },
+
   text: {
     marginTop: 8,
-    color: "#444",
   },
+
   price: {
     marginTop: 8,
     color: "#16a34a",
