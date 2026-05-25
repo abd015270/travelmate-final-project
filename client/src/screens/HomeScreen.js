@@ -3,6 +3,7 @@ import { useContext } from "react";
 import {
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 
@@ -10,20 +11,17 @@ import { ThemeContext } from "../context/ThemeContext";
 
 import { LanguageContext } from "../context/LanguageContext";
 
-export default function HomeScreen() {
-  const { colors } =
-    useContext(ThemeContext);
+export default function HomeScreen({ navigation }) {
+  const { colors } = useContext(ThemeContext);
 
-  const { t } =
-    useContext(LanguageContext);
+  const { t } = useContext(LanguageContext);
 
   return (
     <View
       style={[
         styles.container,
         {
-          backgroundColor:
-            colors.background,
+          backgroundColor: colors.background,
         },
       ]}
     >
@@ -48,6 +46,29 @@ export default function HomeScreen() {
       >
         {t.subtitle}
       </Text>
+
+      <View style={styles.cards}>
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => navigation.navigate(t.trips)}
+        >
+          <Text style={styles.cardText}>{t.trips}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => navigation.navigate(t.favorites)}
+        >
+          <Text style={styles.cardText}>{t.favorites}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => navigation.navigate(t.bookings)}
+        >
+          <Text style={styles.cardText}>{t.bookings}</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -55,17 +76,37 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 20,
     justifyContent: "center",
-    alignItems: "center",
   },
 
   title: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 10,
   },
 
   text: {
     fontSize: 18,
+    textAlign: "center",
+    marginBottom: 30,
+  },
+
+  cards: {
+    gap: 15,
+  },
+
+  card: {
+    backgroundColor: "#2563eb",
+    padding: 25,
+    borderRadius: 15,
+  },
+
+  cardText: {
+    color: "white",
+    fontSize: 22,
+    fontWeight: "bold",
+    textAlign: "center",
   },
 });

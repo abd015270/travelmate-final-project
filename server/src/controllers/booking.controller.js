@@ -22,13 +22,12 @@ const createBooking = async (req, res) => {
     }
 
     trip.availableSeats = trip.availableSeats - seats;
-
     await trip.save();
 
     const booking = await Booking.create({
       user: req.user._id,
       trip: trip._id,
-      seats: seats,
+      seats,
       totalPrice: trip.price * seats,
       status: "confirmed",
     });
@@ -63,7 +62,40 @@ const getBookings = async (req, res) => {
   }
 };
 
+const deleteBooking = async (req, res) => {
+  try {
+    const booking = await Booking.findOne({
+      _id: req.params.id,
+      user: req.user._id,
+    });
+
+    if (!booking) {
+      return res.status(404).json({
+        message: "booking not found",
+      });
+    }
+
+    const trip = await Trip.findById(booking.trip);
+
+    if (trip) {
+      trip.availableSeats = trip.availableSeats + booking.seats;
+      await trip.save();
+    }
+
+    await Booking.findByIdAndDelete(req.params.id);
+
+    res.json({
+      message: "booking deleted",
+    });
+  } catch (error) {
+    res.status(400).json({
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   createBooking,
   getBookings,
+  deleteBooking,
 };

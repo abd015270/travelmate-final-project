@@ -8,162 +8,69 @@ import {
 } from "react-native";
 
 import { AuthContext } from "../context/AuthContext";
-
 import { ThemeContext } from "../context/ThemeContext";
-
 import { LanguageContext } from "../context/LanguageContext";
 
 export default function ProfileScreen() {
-  const { user, logout } =
-    useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
 
-  const {
-    colors,
-    darkMode,
-    toggleTheme,
-  } = useContext(ThemeContext);
+  const { colors, darkMode, toggleTheme } = useContext(ThemeContext);
 
-  const {
-    language,
-    changeLanguage,
-    t,
-  } = useContext(LanguageContext);
+  const { changeLanguage, t } = useContext(LanguageContext);
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor:
-            colors.background,
-        },
-      ]}
-    >
-      <Text
-        style={[
-          styles.title,
-          {
-            color: colors.text,
-          },
-        ]}
-      >
-        {t.profile}
-      </Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.title, { color: colors.text }]}>{t.profile}</Text>
 
-      <View
-        style={[
-          styles.card,
-          {
-            backgroundColor:
-              colors.card,
-          },
-        ]}
-      >
-        <Text
-          style={[
-            styles.text,
-            {
-              color: colors.text,
-            },
-          ]}
-        >
+      <View style={[styles.card, { backgroundColor: colors.card }]}>
+        <Text style={[styles.text, { color: colors.text }]}>
           Name: {user?.fullName}
         </Text>
 
-        <Text
-          style={[
-            styles.text,
-            {
-              color: colors.text,
-            },
-          ]}
-        >
+        <Text style={[styles.text, { color: colors.text }]}>
           Email: {user?.email}
         </Text>
 
-        <Text
-          style={[
-            styles.text,
-            {
-              color: colors.text,
-            },
-          ]}
-        >
+        <Text style={[styles.text, { color: colors.text }]}>
           Phone: {user?.phone}
         </Text>
 
-        <Text
-          style={[
-            styles.text,
-            {
-              color: colors.text,
-            },
-          ]}
-        >
-          National ID:{" "}
-          {user?.nationalId}
+        <Text style={[styles.text, { color: colors.text }]}>
+          National ID: {user?.nationalId}
         </Text>
       </View>
 
-      <TouchableOpacity
-        style={styles.themeButton}
-        onPress={toggleTheme}
-      >
+      <TouchableOpacity style={styles.themeButton} onPress={toggleTheme}>
         <Text style={styles.buttonText}>
-          {darkMode
-            ? t.lightMode
-            : t.darkMode}
+          {darkMode ? t.lightMode : t.darkMode}
         </Text>
       </TouchableOpacity>
 
       <View style={styles.languages}>
         <TouchableOpacity
           style={styles.langButton}
-          onPress={() =>
-            changeLanguage("en")
-          }
+          onPress={() => changeLanguage("en")}
         >
-          <Text
-            style={styles.buttonText}
-          >
-            EN
-          </Text>
+          <Text style={styles.buttonText}>EN</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.langButton}
-          onPress={() =>
-            changeLanguage("ar")
-          }
+          onPress={() => changeLanguage("ar")}
         >
-          <Text
-            style={styles.buttonText}
-          >
-            AR
-          </Text>
+          <Text style={styles.buttonText}>AR</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.langButton}
-          onPress={() =>
-            changeLanguage("he")
-          }
+          onPress={() => changeLanguage("he")}
         >
-          <Text
-            style={styles.buttonText}
-          >
-            HE
-          </Text>
+          <Text style={styles.buttonText}>HE</Text>
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity
-        style={styles.logoutButton}
-        onPress={logout}
-      >
-        <Text style={styles.buttonText}>
-          {t.logout}
-        </Text>
+      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+        <Text style={styles.buttonText}>{t.logout}</Text>
       </TouchableOpacity>
     </View>
   );

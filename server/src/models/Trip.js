@@ -25,6 +25,7 @@ const tripSchema = mongoose.Schema(
     price: {
       type: Number,
       required: [true, "price is required"],
+      min: [0, "price must be positive"],
     },
 
     image: {
@@ -37,9 +38,31 @@ const tripSchema = mongoose.Schema(
       required: [true, "category is required"],
     },
 
+    airline: {
+      type: String,
+      required: [true, "airline is required"],
+    },
+
+    departureDate: {
+      type: Date,
+      required: [true, "departure date is required"],
+    },
+
+    returnDate: {
+      type: Date,
+      required: [true, "return date is required"],
+    },
+
+    days: {
+      type: Number,
+      required: [true, "days is required"],
+      min: [1, "days must be at least 1"],
+    },
+
     availableSeats: {
       type: Number,
       required: [true, "available seats is required"],
+      min: [0, "available seats must be positive"],
     },
 
     location: {

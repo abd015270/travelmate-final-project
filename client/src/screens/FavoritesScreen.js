@@ -5,9 +5,11 @@ import {
 } from "react";
 
 import {
+  Alert,
   FlatList,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 
@@ -18,14 +20,11 @@ import { AuthContext } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext";
 
 export default function FavoritesScreen() {
-  const { token } =
-    useContext(AuthContext);
+  const { token } = useContext(AuthContext);
 
-  const { colors } =
-    useContext(ThemeContext);
+  const { colors } = useContext(ThemeContext);
 
-  const [favorites, setFavorites] =
-    useState([]);
+  const [favorites, setFavorites] = useState([]);
 
   useEffect(() => {
     getFavorites();
@@ -33,19 +32,31 @@ export default function FavoritesScreen() {
 
   const getFavorites = async () => {
     try {
-      const response =
-        await API.get(
-          "/favorites",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+      const response = await API.get("/favorites", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       setFavorites(response.data);
     } catch (error) {
       console.log(error.message);
+    }
+  };
+
+  const deleteFavorite = async (tripId) => {
+    try {
+      await API.delete(`/favorites/${tripId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      Alert.alert("Success", "Favorite deleted");
+
+      getFavorites();
+    } catch (error) {
+      Alert.alert("Error", "Could not delete favorite");
     }
   };
 
@@ -54,23 +65,19 @@ export default function FavoritesScreen() {
       style={[
         styles.container,
         {
-          backgroundColor:
-            colors.background,
+          backgroundColor: colors.background,
         },
       ]}
     >
       <FlatList
         data={favorites}
-        keyExtractor={(item) =>
-          item._id
-        }
+        keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
           <View
             style={[
               styles.card,
               {
-                backgroundColor:
-                  colors.card,
+                backgroundColor: colors.card,
               },
             ]}
           >
@@ -89,17 +96,21 @@ export default function FavoritesScreen() {
               style={[
                 styles.text,
                 {
-                  color:
-                    colors.subText,
+                  color: colors.subText,
                 },
               ]}
             >
-              {item.trip?.city}
+              {item.trip?.city}, {item.trip?.country}
             </Text>
 
-            <Text style={styles.price}>
-              ${item.trip?.price}
-            </Text>
+            <Text style={styles.price}>${item.trip?.price}</Text>
+
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={() => deleteFavorite(item.trip?._id)}
+            >
+              <Text style={styles.buttonText}>Delete Favorite</Text>
+            </TouchableOpacity>
           </View>
         )}
       />
@@ -134,5 +145,18 @@ const styles = StyleSheet.create({
     color: "#16a34a",
     fontWeight: "bold",
     fontSize: 18,
+  },
+
+  deleteButton: {
+    backgroundColor: "#dc2626",
+    padding: 12,
+    borderRadius: 10,
+    marginTop: 12,
+  },
+
+  buttonText: {
+    color: "white",
+    textAlign: "center",
+    fontWeight: "bold",
   },
 });
