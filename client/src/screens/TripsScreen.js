@@ -155,17 +155,6 @@ export default function TripsScreen() {
     );
   };
 
-  const aiSuggestion = useMemo(() => {
-    if (trips.length === 0) {
-      return null;
-    }
-
-    return trips.reduce((best, trip) =>
-      trip.price < best.price
-        ? trip
-        : best
-    );
-  }, [trips]);
 
   const filteredTrips = trips.filter(
     (trip) => {
@@ -203,37 +192,6 @@ export default function TripsScreen() {
         },
       ]}
     >
-      {aiSuggestion && (
-        <View
-          style={[
-            styles.aiCard,
-            {
-              backgroundColor:
-                colors.card,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.aiTitle,
-              {
-                color: colors.text,
-              },
-            ]}
-          >
-            AI Suggested Trip
-          </Text>
-
-          <Text
-            style={{
-              color:
-                colors.subText,
-            }}
-          >
-            {aiSuggestion.title}
-          </Text>
-        </View>
-      )}
 
       <TextInput
         style={[
@@ -479,22 +437,7 @@ export default function TripsScreen() {
                 </Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={
-                  styles.voiceButton
-                }
-                onPress={() =>
-                  speakTrip(item)
-                }
-              >
-                <Text
-                  style={
-                    styles.buttonText
-                  }
-                >
-                  Voice
-                </Text>
-              </TouchableOpacity>
+              
             </View>
           );
         }}
