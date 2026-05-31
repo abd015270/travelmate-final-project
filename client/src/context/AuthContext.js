@@ -40,6 +40,29 @@ export default function AuthProvider({ children }) {
     await AsyncStorage.setItem("user", JSON.stringify(response.data.user));
   };
 
+  const updateProfile = async (data) => {
+    const response = await API.patch("/users/profile", data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    setUser(response.data);
+    await AsyncStorage.setItem("user", JSON.stringify(response.data));
+
+    return response.data;
+  };
+
+  const deleteAccount = async () => {
+    await API.delete("/users/profile", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    await logout();
+  };
+
   const logout = async () => {
     setUser(null);
     setToken(null);
@@ -49,7 +72,17 @@ export default function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, register, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        register,
+        login,
+        updateProfile,
+        deleteAccount,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

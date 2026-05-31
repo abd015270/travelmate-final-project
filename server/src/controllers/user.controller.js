@@ -6,13 +6,10 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(
-      req.user._id,
-      req.body,
-      {
-        new: true,
-      }
-    ).select("-password");
+    const user = await User.findByIdAndUpdate(req.user._id, req.body, {
+      new: true,
+      runValidators: true,
+    }).select("-password");
 
     res.json(user);
   } catch (error) {

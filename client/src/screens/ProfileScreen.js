@@ -1,8 +1,10 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 
 import {
+  Alert,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -12,11 +14,45 @@ import { ThemeContext } from "../context/ThemeContext";
 import { LanguageContext } from "../context/LanguageContext";
 
 export default function ProfileScreen() {
-  const { user, logout } = useContext(AuthContext);
+  const { user, logout, updateProfile, deleteAccount } = useContext(AuthContext);
 
   const { colors, darkMode, toggleTheme } = useContext(ThemeContext);
 
   const { changeLanguage, t } = useContext(LanguageContext);
+
+  const [fullName, setFullName] = useState(user?.fullName || "");
+  const [phone, setPhone] = useState(user?.phone || "");
+
+  const handleUpdate = async () => {
+    try {
+      await updateProfile({
+        fullName,
+        phone,
+      });
+
+      Alert.alert("Success", "Profile updated");
+    } catch (error) {
+      Alert.alert("Error", "Could not update profile");
+    }
+  };
+
+  const handleDelete = () => {
+    Alert.alert("Delete Account", "Are you sure?", [
+      {
+        text: "Cancel",
+      },
+      {
+        text: "Delete",
+        onPress: async () => {
+          try {
+            await deleteAccount();
+          } catch (error) {
+            Alert.alert("Error", "Could not delete account");
+          }
+        },
+      },
+    ]);
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -24,21 +60,47 @@ export default function ProfileScreen() {
 
       <View style={[styles.card, { backgroundColor: colors.card }]}>
         <Text style={[styles.text, { color: colors.text }]}>
-          Name: {user?.fullName}
-        </Text>
-
-        <Text style={[styles.text, { color: colors.text }]}>
           Email: {user?.email}
-        </Text>
-
-        <Text style={[styles.text, { color: colors.text }]}>
-          Phone: {user?.phone}
         </Text>
 
         <Text style={[styles.text, { color: colors.text }]}>
           National ID: {user?.nationalId}
         </Text>
+
+        <TextInput
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.background,
+              color: colors.text,
+              borderColor: colors.border,
+            },
+          ]}
+          value={fullName}
+          onChangeText={setFullName}
+          placeholder="Full Name"
+          placeholderTextColor={colors.subText}
+        />
+
+        <TextInput
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.background,
+              color: colors.text,
+              borderColor: colors.border,
+            },
+          ]}
+          value={phone}
+          onChangeText={setPhone}
+          placeholder="Phone"
+          placeholderTextColor={colors.subText}
+        />
       </View>
+
+      <TouchableOpacity style={styles.updateButton} onPress={handleUpdate}>
+        <Text style={styles.buttonText}>Update Profile</Text>
+      </TouchableOpacity>
 
       <TouchableOpacity style={styles.themeButton} onPress={toggleTheme}>
         <Text style={styles.buttonText}>
@@ -47,30 +109,25 @@ export default function ProfileScreen() {
       </TouchableOpacity>
 
       <View style={styles.languages}>
-        <TouchableOpacity
-          style={styles.langButton}
-          onPress={() => changeLanguage("en")}
-        >
+        <TouchableOpacity style={styles.langButton} onPress={() => changeLanguage("en")}>
           <Text style={styles.buttonText}>EN</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.langButton}
-          onPress={() => changeLanguage("ar")}
-        >
+        <TouchableOpacity style={styles.langButton} onPress={() => changeLanguage("ar")}>
           <Text style={styles.buttonText}>AR</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.langButton}
-          onPress={() => changeLanguage("he")}
-        >
+        <TouchableOpacity style={styles.langButton} onPress={() => changeLanguage("he")}>
           <Text style={styles.buttonText}>HE</Text>
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity style={styles.logoutButton} onPress={logout}>
         <Text style={styles.buttonText}>{t.logout}</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+        <Text style={styles.buttonText}>Delete Account</Text>
       </TouchableOpacity>
     </View>
   );
@@ -99,14 +156,35 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
-  themeButton: {
-    backgroundColor: "#2563eb",
+  input: {
+    borderWidth: 1,
+    padding: 12,
+    borderRadius: 10,
+    marginTop: 10,
+  },
+
+  updateButton: {
+    backgroundColor: "#16a34a",
     padding: 15,
     borderRadius: 10,
     marginTop: 20,
   },
 
+  themeButton: {
+    backgroundColor: "#2563eb",
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 12,
+  },
+
   logoutButton: {
+    backgroundColor: "#f97316",
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 12,
+  },
+
+  deleteButton: {
     backgroundColor: "#dc2626",
     padding: 15,
     borderRadius: 10,
