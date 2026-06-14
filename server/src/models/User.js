@@ -34,6 +34,12 @@ const userSchema = mongoose.Schema(
       type: String,
       required: [true, "password is required"],
     },
+
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
   },
   {
     timestamps: true,
@@ -46,7 +52,6 @@ userSchema.pre("save", async function () {
   }
 
   const salt = await bcrypt.genSalt(10);
-
   this.password = await bcrypt.hash(this.password, salt);
 });
 

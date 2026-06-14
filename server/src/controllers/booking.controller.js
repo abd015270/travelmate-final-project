@@ -22,6 +22,7 @@ const createBooking = async (req, res) => {
     }
 
     trip.availableSeats = trip.availableSeats - seats;
+
     await trip.save();
 
     const booking = await Booking.create({
@@ -79,6 +80,7 @@ const deleteBooking = async (req, res) => {
 
     if (trip) {
       trip.availableSeats = trip.availableSeats + booking.seats;
+
       await trip.save();
     }
 

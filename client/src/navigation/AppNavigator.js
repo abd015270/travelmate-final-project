@@ -22,6 +22,10 @@ import BookingsScreen from "../screens/BookingsScreen";
 
 import ProfileScreen from "../screens/ProfileScreen";
 
+import AdminScreen from "../screens/AdminScreen";
+
+import ExpiredTripsScreen from "../screens/ExpiredTripsScreen";
+
 const Tab = createBottomTabNavigator();
 
 const Stack = createNativeStackNavigator();
@@ -29,36 +33,31 @@ const Stack = createNativeStackNavigator();
 function MainTabs() {
   const { t } = useContext(LanguageContext);
 
+  const { user } = useContext(AuthContext);
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
       }}
     >
-      <Tab.Screen
-        name={t.home}
-        component={HomeScreen}
-      />
+      <Tab.Screen name={t.home} component={HomeScreen} />
 
-      <Tab.Screen
-        name={t.trips}
-        component={TripsScreen}
-      />
+      <Tab.Screen name={t.trips} component={TripsScreen} />
 
-      <Tab.Screen
-        name={t.favorites}
-        component={FavoritesScreen}
-      />
+      <Tab.Screen name={t.favorites} component={FavoritesScreen} />
 
-      <Tab.Screen
-        name={t.bookings}
-        component={BookingsScreen}
-      />
+      <Tab.Screen name={t.bookings} component={BookingsScreen} />
 
-      <Tab.Screen
-        name={t.profile}
-        component={ProfileScreen}
-      />
+      <Tab.Screen name={t.profile} component={ProfileScreen} />
+
+      {user?.role === "admin" && (
+        <Tab.Screen name="Admin" component={AdminScreen} />
+      )}
+
+      {user?.role === "admin" && (
+        <Tab.Screen name="Expired" component={ExpiredTripsScreen} />
+      )}
     </Tab.Navigator>
   );
 }
@@ -66,15 +65,9 @@ function MainTabs() {
 function AuthStack() {
   return (
     <Stack.Navigator>
-      <Stack.Screen
-        name="Login"
-        component={LoginScreen}
-      />
+      <Stack.Screen name="Login" component={LoginScreen} />
 
-      <Stack.Screen
-        name="Register"
-        component={RegisterScreen}
-      />
+      <Stack.Screen name="Register" component={RegisterScreen} />
     </Stack.Navigator>
   );
 }

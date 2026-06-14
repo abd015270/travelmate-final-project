@@ -14,7 +14,13 @@ const createTrip = async (req, res) => {
 
 const getTrips = async (req, res) => {
   try {
-    let filter = {};
+    const today = new Date();
+
+    let filter = {
+      returnDate: {
+        $gte: today,
+      },
+    };
 
     if (req.query.city) {
       filter.city = req.query.city;
@@ -24,19 +30,64 @@ const getTrips = async (req, res) => {
       filter.category = req.query.category;
     }
 
+    if (req.query.airline) {
+      filter.airline = req.query.airline;
+    }
+
     let trips = Trip.find(filter);
+
+    if (req.query.search) {
+      filter.$or = [
+        {
+          title: {
+            $regex: req.query.search,
+            $options: "i",
+          },
+        },
+        {
+          city: {
+            $regex: req.query.search,
+            $options: "i",
+          },
+        },
+      ];
+
+      trips = Trip.find(filter);
+    }
 
     if (req.query.sort === "price") {
       trips = trips.sort({ price: 1 });
+    }
+
+    if (req.query.skip) {
+      trips = trips.skip(parseInt(req.query.skip));
     }
 
     if (req.query.limit) {
       trips = trips.limit(parseInt(req.query.limit));
     }
 
-    const result = await trips;
+    const result = await trips.select("-__v");
 
     res.json(result);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+const getExpiredTrips = async (req, res) => {
+  try {
+    const today = new Date();
+
+    const trips = await Trip.find({
+      returnDate: {
+        $lt: today,
+      },
+    }).sort({ returnDate: -1 });
+
+    res.json(trips);
   } catch (error) {
     res.status(500).json({
       message: error.message,
@@ -64,13 +115,16 @@ const getTripById = async (req, res) => {
 
 const updateTrip = async (req, res) => {
   try {
-    const trip = await Trip.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-      }
-    );
+    const trip = await Trip.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!trip) {
+      return res.status(404).json({
+        message: "trip not found",
+      });
+    }
 
     res.json(trip);
   } catch (error) {
@@ -82,7 +136,13 @@ const updateTrip = async (req, res) => {
 
 const deleteTrip = async (req, res) => {
   try {
-    await Trip.findByIdAndDelete(req.params.id);
+    const trip = await Trip.findByIdAndDelete(req.params.id);
+
+    if (!trip) {
+      return res.status(404).json({
+        message: "trip not found",
+      });
+    }
 
     res.json({
       message: "trip deleted",
@@ -100,10 +160,18 @@ const getTripStats = async (req, res) => {
       {
         $group: {
           _id: "$category",
-          count: { $sum: 1 },
-          averagePrice: { $avg: "$price" },
-          maxPrice: { $max: "$price" },
-          minPrice: { $min: "$price" },
+          count: {
+            $sum: 1,
+          },
+          averagePrice: {
+            $avg: "$price",
+          },
+          maxPrice: {
+            $max: "$price",
+          },
+          minPrice: {
+            $min: "$price",
+          },
         },
       },
       {
@@ -127,6 +195,7 @@ const getTripStats = async (req, res) => {
 module.exports = {
   createTrip,
   getTrips,
+  getExpiredTrips,
   getTripById,
   updateTrip,
   deleteTrip,

@@ -149,11 +149,6 @@ export default function TripsScreen() {
     Linking.openURL(url);
   };
 
-  const speakTrip = (trip) => {
-    Speech.speak(
-      `${trip.title} in ${trip.city}. Price ${trip.price} dollars`
-    );
-  };
 
 
   const filteredTrips = trips.filter(

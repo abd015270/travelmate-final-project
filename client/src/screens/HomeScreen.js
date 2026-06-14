@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 
 import {
   StyleSheet,
@@ -7,43 +7,44 @@ import {
   View,
 } from "react-native";
 
+import * as Notifications from "expo-notifications";
+
+import { AuthContext } from "../context/AuthContext";
+
 import { ThemeContext } from "../context/ThemeContext";
 
 import { LanguageContext } from "../context/LanguageContext";
 
 export default function HomeScreen({ navigation }) {
+  const { user } = useContext(AuthContext);
+
   const { colors } = useContext(ThemeContext);
 
   const { t } = useContext(LanguageContext);
 
-  return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: colors.background,
-        },
-      ]}
-    >
-      <Text
-        style={[
-          styles.title,
-          {
-            color: colors.text,
-          },
-        ]}
-      >
-        {t.welcome}
-      </Text>
+  useEffect(() => {
+    sendWelcomeNotification();
+  }, []);
 
-      <Text
-        style={[
-          styles.text,
-          {
-            color: colors.subText,
-          },
-        ]}
-      >
+  const sendWelcomeNotification = async () => {
+    try {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "TravelMate",
+          body: "Welcome back to your travel app",
+        },
+        trigger: null,
+      });
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
+  return (
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.title, { color: colors.text }]}>{t.welcome}</Text>
+
+      <Text style={[styles.text, { color: colors.subText }]}>
         {t.subtitle}
       </Text>
 
@@ -68,6 +69,24 @@ export default function HomeScreen({ navigation }) {
         >
           <Text style={styles.cardText}>{t.bookings}</Text>
         </TouchableOpacity>
+
+        {user?.role === "admin" && (
+          <TouchableOpacity
+            style={styles.adminCard}
+            onPress={() => navigation.navigate("Admin")}
+          >
+            <Text style={styles.cardText}>Admin Dashboard</Text>
+          </TouchableOpacity>
+        )}
+
+        {user?.role === "admin" && (
+          <TouchableOpacity
+            style={styles.expiredCard}
+            onPress={() => navigation.navigate("Expired")}
+          >
+            <Text style={styles.cardText}>Expired Trips</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -99,13 +118,25 @@ const styles = StyleSheet.create({
 
   card: {
     backgroundColor: "#2563eb",
-    padding: 25,
+    padding: 22,
+    borderRadius: 15,
+  },
+
+  adminCard: {
+    backgroundColor: "#16a34a",
+    padding: 22,
+    borderRadius: 15,
+  },
+
+  expiredCard: {
+    backgroundColor: "#f97316",
+    padding: 22,
     borderRadius: 15,
   },
 
   cardText: {
     color: "white",
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "bold",
     textAlign: "center",
   },

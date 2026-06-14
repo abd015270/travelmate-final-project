@@ -6,7 +6,21 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.user._id, req.body, {
+    const allowedData = {
+      fullName: req.body.fullName,
+      email: req.body.email,
+      nationalId: req.body.nationalId,
+      phone: req.body.phone,
+      birthDate: req.body.birthDate,
+    };
+
+    Object.keys(allowedData).forEach((key) => {
+      if (allowedData[key] === undefined || allowedData[key] === "") {
+        delete allowedData[key];
+      }
+    });
+
+    const user = await User.findByIdAndUpdate(req.user._id, allowedData, {
       new: true,
       runValidators: true,
     }).select("-password");

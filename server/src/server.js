@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
+const startReminderService = require("./utils/reminderService");
 
 const connectDB = require("./config/db");
 
@@ -15,6 +16,8 @@ const bookingRoutes = require("./routes/booking.routes");
 dotenv.config();
 
 connectDB();
+
+startReminderService();
 
 const app = express();
 
