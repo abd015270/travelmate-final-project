@@ -21,18 +21,25 @@ export default function ProfileScreen() {
   const { changeLanguage, t } = useContext(LanguageContext);
 
   const [fullName, setFullName] = useState(user?.fullName || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [nationalId, setNationalId] = useState(user?.nationalId || "");
   const [phone, setPhone] = useState(user?.phone || "");
 
   const handleUpdate = async () => {
     try {
       await updateProfile({
         fullName,
+        email,
+        nationalId,
         phone,
       });
 
       Alert.alert("Success", "Profile updated");
     } catch (error) {
-      Alert.alert("Error", "Could not update profile");
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Could not update profile"
+      );
     }
   };
 
@@ -59,14 +66,6 @@ export default function ProfileScreen() {
       <Text style={[styles.title, { color: colors.text }]}>{t.profile}</Text>
 
       <View style={[styles.card, { backgroundColor: colors.card }]}>
-        <Text style={[styles.text, { color: colors.text }]}>
-          Email: {user?.email}
-        </Text>
-
-        <Text style={[styles.text, { color: colors.text }]}>
-          National ID: {user?.nationalId}
-        </Text>
-
         <TextInput
           style={[
             styles.input,
@@ -79,6 +78,36 @@ export default function ProfileScreen() {
           value={fullName}
           onChangeText={setFullName}
           placeholder="Full Name"
+          placeholderTextColor={colors.subText}
+        />
+
+        <TextInput
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.background,
+              color: colors.text,
+              borderColor: colors.border,
+            },
+          ]}
+          value={email}
+          onChangeText={setEmail}
+          placeholder="Email"
+          placeholderTextColor={colors.subText}
+        />
+
+        <TextInput
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.background,
+              color: colors.text,
+              borderColor: colors.border,
+            },
+          ]}
+          value={nationalId}
+          onChangeText={setNationalId}
+          placeholder="National ID"
           placeholderTextColor={colors.subText}
         />
 
@@ -109,15 +138,24 @@ export default function ProfileScreen() {
       </TouchableOpacity>
 
       <View style={styles.languages}>
-        <TouchableOpacity style={styles.langButton} onPress={() => changeLanguage("en")}>
+        <TouchableOpacity
+          style={styles.langButton}
+          onPress={() => changeLanguage("en")}
+        >
           <Text style={styles.buttonText}>EN</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.langButton} onPress={() => changeLanguage("ar")}>
+        <TouchableOpacity
+          style={styles.langButton}
+          onPress={() => changeLanguage("ar")}
+        >
           <Text style={styles.buttonText}>AR</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.langButton} onPress={() => changeLanguage("he")}>
+        <TouchableOpacity
+          style={styles.langButton}
+          onPress={() => changeLanguage("he")}
+        >
           <Text style={styles.buttonText}>HE</Text>
         </TouchableOpacity>
       </View>
@@ -151,16 +189,11 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
 
-  text: {
-    fontSize: 16,
-    marginBottom: 10,
-  },
-
   input: {
     borderWidth: 1,
     padding: 12,
     borderRadius: 10,
-    marginTop: 10,
+    marginBottom: 10,
   },
 
   updateButton: {

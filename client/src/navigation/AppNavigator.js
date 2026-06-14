@@ -30,10 +30,8 @@ const Tab = createBottomTabNavigator();
 
 const Stack = createNativeStackNavigator();
 
-function MainTabs() {
+function UserTabs() {
   const { t } = useContext(LanguageContext);
-
-  const { user } = useContext(AuthContext);
 
   return (
     <Tab.Navigator
@@ -50,14 +48,24 @@ function MainTabs() {
       <Tab.Screen name={t.bookings} component={BookingsScreen} />
 
       <Tab.Screen name={t.profile} component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+}
 
-      {user?.role === "admin" && (
-        <Tab.Screen name="Admin" component={AdminScreen} />
-      )}
+function AdminTabs() {
+  const { t } = useContext(LanguageContext);
 
-      {user?.role === "admin" && (
-        <Tab.Screen name="Expired" component={ExpiredTripsScreen} />
-      )}
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Tab.Screen name="Admin" component={AdminScreen} />
+
+      <Tab.Screen name="Expired" component={ExpiredTripsScreen} />
+
+      <Tab.Screen name={t.profile} component={ProfileScreen} />
     </Tab.Navigator>
   );
 }
@@ -75,9 +83,13 @@ function AuthStack() {
 export default function AppNavigator() {
   const { user } = useContext(AuthContext);
 
-  if (user) {
-    return <MainTabs />;
+  if (!user) {
+    return <AuthStack />;
   }
 
-  return <AuthStack />;
+  if (user.role === "admin") {
+    return <AdminTabs />;
+  }
+
+  return <UserTabs />;
 }

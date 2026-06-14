@@ -53,6 +53,16 @@ const tripSchema = mongoose.Schema(
       required: [true, "return date is required"],
     },
 
+    departureTime: {
+      type: String,
+      required: [true, "departure time is required"],
+    },
+
+    returnTime: {
+      type: String,
+      required: [true, "return time is required"],
+    },
+
     days: {
       type: Number,
       required: [true, "days is required"],

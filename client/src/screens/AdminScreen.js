@@ -36,6 +36,8 @@ export default function AdminScreen() {
   const [airline, setAirline] = useState("");
   const [departureDate, setDepartureDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
+  const [departureTime, setDepartureTime] = useState("");
+  const [returnTime, setReturnTime] = useState("");
   const [days, setDays] = useState("");
   const [availableSeats, setAvailableSeats] = useState("");
   const [lat, setLat] = useState("");
@@ -67,6 +69,8 @@ export default function AdminScreen() {
     setAirline("");
     setDepartureDate("");
     setReturnDate("");
+    setDepartureTime("");
+    setReturnTime("");
     setDays("");
     setAvailableSeats("");
     setLat("");
@@ -85,6 +89,8 @@ export default function AdminScreen() {
     setAirline(trip.airline);
     setDepartureDate(trip.departureDate?.slice(0, 10));
     setReturnDate(trip.returnDate?.slice(0, 10));
+    setDepartureTime(trip.departureTime || "");
+    setReturnTime(trip.returnTime || "");
     setDays(String(trip.days));
     setAvailableSeats(String(trip.availableSeats));
     setLat(String(trip.location?.lat));
@@ -104,6 +110,8 @@ export default function AdminScreen() {
         !airline ||
         !departureDate ||
         !returnDate ||
+        !departureTime ||
+        !returnTime ||
         !days ||
         !availableSeats ||
         !lat ||
@@ -124,6 +132,8 @@ export default function AdminScreen() {
         airline,
         departureDate,
         returnDate,
+        departureTime,
+        returnTime,
         days: Number(days),
         availableSeats: Number(availableSeats),
         location: {
@@ -177,31 +187,20 @@ export default function AdminScreen() {
       <Text style={[styles.title, { color: colors.text }]}>Admin Dashboard</Text>
 
       <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Title" placeholderTextColor={colors.subText} value={title} onChangeText={setTitle} />
-
       <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="City" placeholderTextColor={colors.subText} value={city} onChangeText={setCity} />
-
       <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Country" placeholderTextColor={colors.subText} value={country} onChangeText={setCountry} />
-
       <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Description" placeholderTextColor={colors.subText} value={description} onChangeText={setDescription} />
-
       <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Price" placeholderTextColor={colors.subText} value={price} onChangeText={setPrice} keyboardType="numeric" />
-
       <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Image URL" placeholderTextColor={colors.subText} value={image} onChangeText={setImage} />
-
       <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Category: Luxury / Adventure" placeholderTextColor={colors.subText} value={category} onChangeText={setCategory} />
-
       <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Airline" placeholderTextColor={colors.subText} value={airline} onChangeText={setAirline} />
-
       <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Departure Date: 2026-07-10" placeholderTextColor={colors.subText} value={departureDate} onChangeText={setDepartureDate} />
-
       <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Return Date: 2026-07-15" placeholderTextColor={colors.subText} value={returnDate} onChangeText={setReturnDate} />
-
+      <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Departure Time: 09:30" placeholderTextColor={colors.subText} value={departureTime} onChangeText={setDepartureTime} />
+      <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Return Time: 18:00" placeholderTextColor={colors.subText} value={returnTime} onChangeText={setReturnTime} />
       <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Days" placeholderTextColor={colors.subText} value={days} onChangeText={setDays} keyboardType="numeric" />
-
       <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Available Seats" placeholderTextColor={colors.subText} value={availableSeats} onChangeText={setAvailableSeats} keyboardType="numeric" />
-
       <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Latitude" placeholderTextColor={colors.subText} value={lat} onChangeText={setLat} keyboardType="numeric" />
-
       <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Longitude" placeholderTextColor={colors.subText} value={lng} onChangeText={setLng} keyboardType="numeric" />
 
       <TouchableOpacity style={styles.saveButton} onPress={saveTrip}>
@@ -224,6 +223,10 @@ export default function AdminScreen() {
 
             <Text style={{ color: colors.subText }}>
               {item.city}, {item.country}
+            </Text>
+
+            <Text style={{ color: colors.subText }}>
+              {item.departureDate?.slice(0, 10)} - {item.departureTime}
             </Text>
 
             <Text style={styles.price}>${item.price}</Text>

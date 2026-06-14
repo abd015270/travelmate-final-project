@@ -10,17 +10,13 @@ import {
 import * as Notifications from "expo-notifications";
 
 import { AuthContext } from "../context/AuthContext";
-
 import { ThemeContext } from "../context/ThemeContext";
-
 import { LanguageContext } from "../context/LanguageContext";
 
 export default function HomeScreen({ navigation }) {
   const { user } = useContext(AuthContext);
-
-  const { colors } = useContext(ThemeContext);
-
-  const { t } = useContext(LanguageContext);
+  const { colors, darkMode, toggleTheme } = useContext(ThemeContext);
+  const { changeLanguage, t } = useContext(LanguageContext);
 
   useEffect(() => {
     sendWelcomeNotification();
@@ -47,6 +43,26 @@ export default function HomeScreen({ navigation }) {
       <Text style={[styles.text, { color: colors.subText }]}>
         {t.subtitle}
       </Text>
+
+      <TouchableOpacity style={styles.themeButton} onPress={toggleTheme}>
+        <Text style={styles.cardText}>
+          {darkMode ? t.lightMode : t.darkMode}
+        </Text>
+      </TouchableOpacity>
+
+      <View style={styles.languages}>
+        <TouchableOpacity style={styles.langButton} onPress={() => changeLanguage("en")}>
+          <Text style={styles.cardText}>EN</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.langButton} onPress={() => changeLanguage("ar")}>
+          <Text style={styles.cardText}>AR</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.langButton} onPress={() => changeLanguage("he")}>
+          <Text style={styles.cardText}>HE</Text>
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.cards}>
         <TouchableOpacity
@@ -109,7 +125,27 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 18,
     textAlign: "center",
-    marginBottom: 30,
+    marginBottom: 20,
+  },
+
+  themeButton: {
+    backgroundColor: "#7c3aed",
+    padding: 15,
+    borderRadius: 15,
+    marginBottom: 15,
+  },
+
+  languages: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+
+  langButton: {
+    backgroundColor: "#16a34a",
+    padding: 12,
+    borderRadius: 10,
+    width: "30%",
   },
 
   cards: {
@@ -136,7 +172,7 @@ const styles = StyleSheet.create({
 
   cardText: {
     color: "white",
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
     textAlign: "center",
   },
