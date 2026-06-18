@@ -12,31 +12,28 @@ import {
 } from "react-native";
 
 import API from "../api/api";
-
+import cities from "../data/cities";
 import { AuthContext } from "../context/AuthContext";
-
 import { ThemeContext } from "../context/ThemeContext";
 
 export default function AdminScreen() {
   const { token } = useContext(AuthContext);
-
   const { colors } = useContext(ThemeContext);
 
   const [trips, setTrips] = useState([]);
-
   const [editId, setEditId] = useState(null);
 
   const [title, setTitle] = useState("");
   const [city, setCity] = useState("");
   const [country, setCountry] = useState("");
-  const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [image, setImage] = useState("");
-  const [category, setCategory] = useState("");
   const [airline, setAirline] = useState("");
+  const [flightHours, setFlightHours] = useState("");
   const [departureDate, setDepartureDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
   const [departureTime, setDepartureTime] = useState("");
+  const [arrivalTime, setArrivalTime] = useState("");
   const [returnTime, setReturnTime] = useState("");
   const [days, setDays] = useState("");
   const [availableSeats, setAvailableSeats] = useState("");
@@ -49,11 +46,116 @@ export default function AdminScreen() {
 
   const getTrips = async () => {
     try {
-      const response = await API.get("/trips");
+      const response = await API.get("/trips/admin/all", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       setTrips(response.data);
     } catch (error) {
       console.log(error.message);
+    }
+  };
+
+  const getCategory = () => {
+    if (Number(days) >= 30) {
+      return "Adventure";
+    }
+
+    if (Number(price) > 1000) {
+      return "Luxury";
+    }
+
+    return "Standard";
+  };
+
+  const chooseCity = (selectedCity) => {
+    const selectedData = cities.find((item) => item.city === selectedCity);
+
+    if (!selectedData) {
+      return;
+    }
+
+    setCity(selectedData.city);
+    setCountry(selectedData.country);
+    setAirline(selectedData.airline);
+    setFlightHours(String(selectedData.flightHours));
+    setLat(String(selectedData.lat));
+    setLng(String(selectedData.lng));
+    setImage(selectedData.image);
+
+    if (departureTime) {
+      calculateArrivalAndReturnTime(
+        departureTime,
+        selectedData.flightHours
+      );
+    }
+  };
+
+  const calculateDays = (start, end) => {
+    if (!start || !end) {
+      return;
+    }
+
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+
+    if (endDate < startDate) {
+      setDays("");
+      return;
+    }
+
+    const diff = endDate - startDate;
+    const result = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+    setDays(String(result));
+  };
+
+  const calculateTime = (time, hours) => {
+    const parts = time.split(":");
+
+    if (parts.length !== 2) {
+      return "";
+    }
+
+    let hour = Number(parts[0]);
+    let minute = Number(parts[1]);
+
+    if (isNaN(hour) || isNaN(minute)) {
+      return "";
+    }
+
+    hour = (hour + hours) % 24;
+
+    const finalHour = String(hour).padStart(2, "0");
+    const finalMinute = String(minute).padStart(2, "0");
+
+    return `${finalHour}:${finalMinute}`;
+  };
+
+  const calculateArrivalAndReturnTime = (time, hours) => {
+    const calculatedTime = calculateTime(time, Number(hours));
+
+    setArrivalTime(calculatedTime);
+    setReturnTime(calculatedTime);
+  };
+
+  const handleDepartureDate = (value) => {
+    setDepartureDate(value);
+    calculateDays(value, returnDate);
+  };
+
+  const handleReturnDate = (value) => {
+    setReturnDate(value);
+    calculateDays(departureDate, value);
+  };
+
+  const handleDepartureTime = (value) => {
+    setDepartureTime(value);
+
+    if (flightHours) {
+      calculateArrivalAndReturnTime(value, Number(flightHours));
     }
   };
 
@@ -62,14 +164,14 @@ export default function AdminScreen() {
     setTitle("");
     setCity("");
     setCountry("");
-    setDescription("");
     setPrice("");
     setImage("");
-    setCategory("");
     setAirline("");
+    setFlightHours("");
     setDepartureDate("");
     setReturnDate("");
     setDepartureTime("");
+    setArrivalTime("");
     setReturnTime("");
     setDays("");
     setAvailableSeats("");
@@ -82,19 +184,24 @@ export default function AdminScreen() {
     setTitle(trip.title);
     setCity(trip.city);
     setCountry(trip.country);
-    setDescription(trip.description);
     setPrice(String(trip.price));
     setImage(trip.image);
-    setCategory(trip.category);
     setAirline(trip.airline);
     setDepartureDate(trip.departureDate?.slice(0, 10));
     setReturnDate(trip.returnDate?.slice(0, 10));
     setDepartureTime(trip.departureTime || "");
+    setArrivalTime(trip.arrivalTime || "");
     setReturnTime(trip.returnTime || "");
     setDays(String(trip.days));
     setAvailableSeats(String(trip.availableSeats));
     setLat(String(trip.location?.lat));
     setLng(String(trip.location?.lng));
+
+    const selectedData = cities.find((item) => item.city === trip.city);
+
+    if (selectedData) {
+      setFlightHours(String(selectedData.flightHours));
+    }
   };
 
   const saveTrip = async () => {
@@ -103,14 +210,13 @@ export default function AdminScreen() {
         !title ||
         !city ||
         !country ||
-        !description ||
         !price ||
         !image ||
-        !category ||
         !airline ||
         !departureDate ||
         !returnDate ||
         !departureTime ||
+        !arrivalTime ||
         !returnTime ||
         !days ||
         !availableSeats ||
@@ -125,14 +231,13 @@ export default function AdminScreen() {
         title,
         city,
         country,
-        description,
         price: Number(price),
         image,
-        category,
         airline,
         departureDate,
         returnDate,
         departureTime,
+        arrivalTime,
         returnTime,
         days: Number(days),
         availableSeats: Number(availableSeats),
@@ -182,26 +287,145 @@ export default function AdminScreen() {
     }
   };
 
+  const deleteAllTrips = async () => {
+    Alert.alert("Delete All Trips", "Are you sure?", [
+      {
+        text: "Cancel",
+      },
+      {
+        text: "Delete",
+        onPress: async () => {
+          try {
+            await API.delete("/trips/admin/all", {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+
+            Alert.alert("Success", "All trips deleted");
+            getTrips();
+          } catch (error) {
+            Alert.alert("Error", "Could not delete all trips");
+          }
+        },
+      },
+    ]);
+  };
+
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.title, { color: colors.text }]}>Admin Dashboard</Text>
 
-      <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Title" placeholderTextColor={colors.subText} value={title} onChangeText={setTitle} />
-      <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="City" placeholderTextColor={colors.subText} value={city} onChangeText={setCity} />
-      <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Country" placeholderTextColor={colors.subText} value={country} onChangeText={setCountry} />
-      <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Description" placeholderTextColor={colors.subText} value={description} onChangeText={setDescription} />
-      <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Price" placeholderTextColor={colors.subText} value={price} onChangeText={setPrice} keyboardType="numeric" />
-      <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Image URL" placeholderTextColor={colors.subText} value={image} onChangeText={setImage} />
-      <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Category: Luxury / Adventure" placeholderTextColor={colors.subText} value={category} onChangeText={setCategory} />
-      <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Airline" placeholderTextColor={colors.subText} value={airline} onChangeText={setAirline} />
-      <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Departure Date: 2026-07-10" placeholderTextColor={colors.subText} value={departureDate} onChangeText={setDepartureDate} />
-      <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Return Date: 2026-07-15" placeholderTextColor={colors.subText} value={returnDate} onChangeText={setReturnDate} />
-      <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Departure Time: 09:30" placeholderTextColor={colors.subText} value={departureTime} onChangeText={setDepartureTime} />
-      <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Return Time: 18:00" placeholderTextColor={colors.subText} value={returnTime} onChangeText={setReturnTime} />
-      <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Days" placeholderTextColor={colors.subText} value={days} onChangeText={setDays} keyboardType="numeric" />
-      <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Available Seats" placeholderTextColor={colors.subText} value={availableSeats} onChangeText={setAvailableSeats} keyboardType="numeric" />
-      <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Latitude" placeholderTextColor={colors.subText} value={lat} onChangeText={setLat} keyboardType="numeric" />
-      <TextInput style={[styles.input, { backgroundColor: colors.card, color: colors.text }]} placeholder="Longitude" placeholderTextColor={colors.subText} value={lng} onChangeText={setLng} keyboardType="numeric" />
+      <TouchableOpacity style={styles.deleteAllButton} onPress={deleteAllTrips}>
+        <Text style={styles.buttonText}>Delete All Trips</Text>
+      </TouchableOpacity>
+
+      <Text style={[styles.label, { color: colors.text }]}>Choose City</Text>
+
+      <View style={styles.cityButtons}>
+        {cities.map((item) => (
+          <TouchableOpacity
+            key={item.city}
+            style={[
+              styles.cityButton,
+              city === item.city && styles.selectedCityButton,
+            ]}
+            onPress={() => chooseCity(item.city)}
+          >
+            <Text style={styles.buttonText}>{item.city}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <TextInput
+        style={[styles.input, { backgroundColor: colors.card, color: colors.text }]}
+        placeholder="Trip Title"
+        placeholderTextColor={colors.subText}
+        value={title}
+        onChangeText={setTitle}
+      />
+
+      <Text style={[styles.autoText, { color: colors.subText }]}>
+        City: {city || "auto"}
+      </Text>
+
+      <Text style={[styles.autoText, { color: colors.subText }]}>
+        Country: {country || "auto"}
+      </Text>
+
+      <Text style={[styles.autoText, { color: colors.subText }]}>
+        Airline: {airline || "auto"}
+      </Text>
+
+      <Text style={[styles.autoText, { color: colors.subText }]}>
+        Latitude: {lat || "auto"}
+      </Text>
+
+      <Text style={[styles.autoText, { color: colors.subText }]}>
+        Longitude: {lng || "auto"}
+      </Text>
+
+      <Text style={[styles.autoText, { color: colors.subText }]}>
+        Image: {image ? "auto image selected" : "auto"}
+      </Text>
+
+      <TextInput
+        style={[styles.input, { backgroundColor: colors.card, color: colors.text }]}
+        placeholder="Price"
+        placeholderTextColor={colors.subText}
+        value={price}
+        onChangeText={setPrice}
+        keyboardType="numeric"
+      />
+
+      <Text style={[styles.autoText, { color: colors.subText }]}>
+        Category: {getCategory()}
+      </Text>
+
+      <TextInput
+        style={[styles.input, { backgroundColor: colors.card, color: colors.text }]}
+        placeholder="Departure Date: 2026-07-10"
+        placeholderTextColor={colors.subText}
+        value={departureDate}
+        onChangeText={handleDepartureDate}
+      />
+
+      <TextInput
+        style={[styles.input, { backgroundColor: colors.card, color: colors.text }]}
+        placeholder="Return Date: 2026-07-15"
+        placeholderTextColor={colors.subText}
+        value={returnDate}
+        onChangeText={handleReturnDate}
+      />
+
+      <Text style={[styles.autoText, { color: colors.subText }]}>
+        Days: {days || "auto"}
+      </Text>
+
+      <TextInput
+        style={[styles.input, { backgroundColor: colors.card, color: colors.text }]}
+        placeholder="Departure Time: 09:30"
+        placeholderTextColor={colors.subText}
+        value={departureTime}
+        onChangeText={handleDepartureTime}
+      />
+
+      <Text style={[styles.autoText, { color: colors.subText }]}>
+        Arrival Time: {arrivalTime || "auto"}
+      </Text>
+
+      <Text style={[styles.autoText, { color: colors.subText }]}>
+        Return Time: {returnTime || "auto"}
+      </Text>
+
+      <TextInput
+        style={[styles.input, { backgroundColor: colors.card, color: colors.text }]}
+        placeholder="Available Seats"
+        placeholderTextColor={colors.subText}
+        value={availableSeats}
+        onChangeText={setAvailableSeats}
+        keyboardType="numeric"
+      />
 
       <TouchableOpacity style={styles.saveButton} onPress={saveTrip}>
         <Text style={styles.buttonText}>{editId ? "Update Trip" : "Add Trip"}</Text>
@@ -226,7 +450,27 @@ export default function AdminScreen() {
             </Text>
 
             <Text style={{ color: colors.subText }}>
-              {item.departureDate?.slice(0, 10)} - {item.departureTime}
+              Airline: {item.airline}
+            </Text>
+
+            <Text style={{ color: colors.subText }}>
+              Category: {item.category}
+            </Text>
+
+            <Text style={{ color: colors.subText }}>
+              Days: {item.days}
+            </Text>
+
+            <Text style={{ color: colors.subText }}>
+              Departure: {item.departureDate?.slice(0, 10)} - {item.departureTime}
+            </Text>
+
+            <Text style={{ color: colors.subText }}>
+              Arrival: {item.arrivalTime}
+            </Text>
+
+            <Text style={{ color: colors.subText }}>
+              Return Time: {item.returnTime}
             </Text>
 
             <Text style={styles.price}>${item.price}</Text>
@@ -257,12 +501,41 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
 
+  label: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+
+  cityButtons: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 15,
+  },
+
+  cityButton: {
+    backgroundColor: "#2563eb",
+    padding: 10,
+    borderRadius: 10,
+  },
+
+  selectedCityButton: {
+    backgroundColor: "#16a34a",
+  },
+
   input: {
     padding: 13,
     borderRadius: 10,
     marginBottom: 10,
     borderWidth: 1,
     borderColor: "#ddd",
+  },
+
+  autoText: {
+    fontSize: 15,
+    marginBottom: 12,
+    fontWeight: "bold",
   },
 
   saveButton: {
@@ -277,6 +550,13 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 10,
     marginBottom: 20,
+  },
+
+  deleteAllButton: {
+    backgroundColor: "#dc2626",
+    padding: 14,
+    borderRadius: 10,
+    marginBottom: 15,
   },
 
   card: {

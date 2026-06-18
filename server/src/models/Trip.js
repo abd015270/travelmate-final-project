@@ -17,11 +17,6 @@ const tripSchema = mongoose.Schema(
       required: [true, "country is required"],
     },
 
-    description: {
-      type: String,
-      required: [true, "description is required"],
-    },
-
     price: {
       type: Number,
       required: [true, "price is required"],
@@ -35,7 +30,8 @@ const tripSchema = mongoose.Schema(
 
     category: {
       type: String,
-      required: [true, "category is required"],
+      enum: ["Luxury", "Adventure", "Standard"],
+      default: "Standard",
     },
 
     airline: {
@@ -56,6 +52,11 @@ const tripSchema = mongoose.Schema(
     departureTime: {
       type: String,
       required: [true, "departure time is required"],
+    },
+
+    arrivalTime: {
+      type: String,
+      required: [true, "arrival time is required"],
     },
 
     returnTime: {
@@ -80,6 +81,7 @@ const tripSchema = mongoose.Schema(
         type: Number,
         required: [true, "latitude is required"],
       },
+
       lng: {
         type: Number,
         required: [true, "longitude is required"],
@@ -90,6 +92,16 @@ const tripSchema = mongoose.Schema(
     timestamps: true,
   }
 );
+
+tripSchema.pre("validate", function () {
+  if (this.days >= 30) {
+    this.category = "Adventure";
+  } else if (this.price > 1000) {
+    this.category = "Luxury";
+  } else {
+    this.category = "Standard";
+  }
+});
 
 const Trip = mongoose.model("Trip", tripSchema);
 

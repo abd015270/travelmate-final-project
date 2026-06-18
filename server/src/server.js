@@ -12,6 +12,7 @@ const userRoutes = require("./routes/user.routes");
 const tripRoutes = require("./routes/trip.routes");
 const favoriteRoutes = require("./routes/favorite.routes");
 const bookingRoutes = require("./routes/booking.routes");
+const adminRoutes = require("./routes/admin.routes");
 
 dotenv.config();
 
@@ -40,6 +41,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/trips", tripRoutes);
 app.use("/api/favorites", favoriteRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/admin", adminRoutes);
+
 
 app.get("/", (req, res) => {
   res.json({

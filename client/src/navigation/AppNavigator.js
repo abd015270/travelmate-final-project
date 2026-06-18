@@ -26,6 +26,8 @@ import AdminScreen from "../screens/AdminScreen";
 
 import ExpiredTripsScreen from "../screens/ExpiredTripsScreen";
 
+import AdminUsersScreen from "../screens/AdminUsersScreen";
+
 const Tab = createBottomTabNavigator();
 
 const Stack = createNativeStackNavigator();
@@ -66,6 +68,9 @@ function AdminTabs() {
       <Tab.Screen name="Expired" component={ExpiredTripsScreen} />
 
       <Tab.Screen name={t.profile} component={ProfileScreen} />
+
+      <Tab.Screen name="Users" component={AdminUsersScreen} />
+      
     </Tab.Navigator>
   );
 }

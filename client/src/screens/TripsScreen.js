@@ -31,8 +31,10 @@ export default function TripsScreen() {
 
   const [trips, setTrips] = useState([]);
   const [favorites, setFavorites] = useState([]);
+
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [priceFilter, setPriceFilter] = useState("all");
 
   useEffect(() => {
     getTrips();
@@ -96,7 +98,10 @@ export default function TripsScreen() {
       Alert.alert("Success", "Trip booked");
       getTrips();
     } catch (error) {
-      Alert.alert("Error", error.response?.data?.message || "Could not book trip");
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Could not book trip"
+      );
     }
   };
 
@@ -107,17 +112,35 @@ export default function TripsScreen() {
 
   const speakTrip = (trip) => {
     Speech.speak(
-      `${trip.title} in ${trip.city}. Airline ${trip.airline}. Departure time ${trip.departureTime}. Return time ${trip.returnTime}. Price ${trip.price} dollars`
+      `${trip.title} in ${trip.city}. Airline ${trip.airline}. Category ${trip.category}. Departure time ${trip.departureTime}. Arrival time ${trip.arrivalTime}. Return time ${trip.returnTime}. Price ${trip.price} dollars`
     );
   };
 
   const aiSuggestion = useMemo(() => {
-    if (trips.length === 0) {
-      return null;
+    if (trips.length === 0) return null;
+
+    return trips.reduce((best, trip) => {
+      return trip.price < best.price ? trip : best;
+    });
+  }, [trips]);
+
+  const checkPriceFilter = (price) => {
+    if (priceFilter === "all") return true;
+
+    if (priceFilter === "low") {
+      return price >= 200 && price <= 700;
     }
 
-    return trips.reduce((best, trip) => (trip.price < best.price ? trip : best));
-  }, [trips]);
+    if (priceFilter === "middle") {
+      return price > 700 && price <= 1500;
+    }
+
+    if (priceFilter === "high") {
+      return price > 1500;
+    }
+
+    return true;
+  };
 
   const filteredTrips = trips.filter((trip) => {
     const today = new Date();
@@ -132,9 +155,12 @@ export default function TripsScreen() {
       trip.city.toLowerCase().includes(search.toLowerCase()) ||
       trip.airline.toLowerCase().includes(search.toLowerCase());
 
-    const matchesFilter = filter === "all" ? true : trip.category === filter;
+    const matchesCategory =
+      categoryFilter === "all" ? true : trip.category === categoryFilter;
 
-    return matchesSearch && matchesFilter;
+    const matchesPrice = checkPriceFilter(Number(trip.price));
+
+    return matchesSearch && matchesCategory && matchesPrice;
   });
 
   return (
@@ -146,7 +172,7 @@ export default function TripsScreen() {
           </Text>
 
           <Text style={{ color: colors.subText }}>
-            {aiSuggestion.title}
+            {aiSuggestion.title} - ${aiSuggestion.price}
           </Text>
         </View>
       )}
@@ -166,17 +192,85 @@ export default function TripsScreen() {
         onChangeText={setSearch}
       />
 
+      <Text style={[styles.filterTitle, { color: colors.text }]}>
+        Category Filter
+      </Text>
+
       <View style={styles.filters}>
-        <TouchableOpacity style={styles.filterButton} onPress={() => setFilter("all")}>
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            categoryFilter === "all" && styles.activeFilter,
+          ]}
+          onPress={() => setCategoryFilter("all")}
+        >
           <Text style={styles.filterText}>All</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.filterButton} onPress={() => setFilter("Luxury")}>
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            categoryFilter === "Luxury" && styles.activeFilter,
+          ]}
+          onPress={() => setCategoryFilter("Luxury")}
+        >
           <Text style={styles.filterText}>Luxury</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.filterButton} onPress={() => setFilter("Adventure")}>
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            categoryFilter === "Adventure" && styles.activeFilter,
+          ]}
+          onPress={() => setCategoryFilter("Adventure")}
+        >
           <Text style={styles.filterText}>Adventure</Text>
+        </TouchableOpacity>
+      </View>
+
+      <Text style={[styles.filterTitle, { color: colors.text }]}>
+        Price Filter
+      </Text>
+
+      <View style={styles.priceFilters}>
+        <TouchableOpacity
+          style={[
+            styles.priceButton,
+            priceFilter === "all" && styles.activeFilter,
+          ]}
+          onPress={() => setPriceFilter("all")}
+        >
+          <Text style={styles.filterText}>All</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.priceButton,
+            priceFilter === "low" && styles.activeFilter,
+          ]}
+          onPress={() => setPriceFilter("low")}
+        >
+          <Text style={styles.filterText}>$200-$700</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.priceButton,
+            priceFilter === "middle" && styles.activeFilter,
+          ]}
+          onPress={() => setPriceFilter("middle")}
+        >
+          <Text style={styles.filterText}>$700-$1500</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.priceButton,
+            priceFilter === "high" && styles.activeFilter,
+          ]}
+          onPress={() => setPriceFilter("high")}
+        >
+          <Text style={styles.filterText}>$1500+</Text>
         </TouchableOpacity>
       </View>
 
@@ -184,7 +278,9 @@ export default function TripsScreen() {
         data={filteredTrips}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => {
-          const isFavorite = favorites.some((fav) => fav.trip?._id === item._id);
+          const isFavorite = favorites.some(
+            (fav) => fav.trip?._id === item._id
+          );
 
           return (
             <View style={[styles.card, { backgroundColor: colors.card }]}>
@@ -203,11 +299,19 @@ export default function TripsScreen() {
               </Text>
 
               <Text style={[styles.text, { color: colors.subText }]}>
+                Category: {item.category}
+              </Text>
+
+              <Text style={[styles.text, { color: colors.subText }]}>
                 Departure Date: {new Date(item.departureDate).toDateString()}
               </Text>
 
               <Text style={[styles.text, { color: colors.subText }]}>
                 Departure Time: {item.departureTime}
+              </Text>
+
+              <Text style={[styles.text, { color: colors.subText }]}>
+                Arrival Time: {item.arrivalTime}
               </Text>
 
               <Text style={[styles.text, { color: colors.subText }]}>
@@ -219,13 +323,20 @@ export default function TripsScreen() {
               </Text>
 
               <Text style={[styles.text, { color: colors.subText }]}>
+                Days: {item.days}
+              </Text>
+
+              <Text style={[styles.text, { color: colors.subText }]}>
                 Seats: {item.availableSeats}
               </Text>
 
               <Text style={styles.price}>${item.price}</Text>
 
               <TouchableOpacity
-                style={styles.favoriteButton}
+                style={[
+                  styles.favoriteButton,
+                  isFavorite && styles.disabledButton,
+                ]}
                 onPress={() => addFavorite(item._id)}
                 disabled={isFavorite}
               >
@@ -241,11 +352,17 @@ export default function TripsScreen() {
                 <Text style={styles.buttonText}>{t.bookTrip}</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.mapButton} onPress={() => openMap(item)}>
+              <TouchableOpacity
+                style={styles.mapButton}
+                onPress={() => openMap(item)}
+              >
                 <Text style={styles.buttonText}>Open Map</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.voiceButton} onPress={() => speakTrip(item)}>
+              <TouchableOpacity
+                style={styles.voiceButton}
+                onPress={() => speakTrip(item)}
+              >
                 <Text style={styles.buttonText}>Voice</Text>
               </TouchableOpacity>
             </View>
@@ -280,17 +397,40 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
 
+  filterTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+
   filters: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 15,
   },
 
+  priceFilters: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 15,
+  },
+
   filterButton: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#64748b",
     padding: 10,
     borderRadius: 10,
     width: "30%",
+  },
+
+  priceButton: {
+    backgroundColor: "#64748b",
+    padding: 10,
+    borderRadius: 10,
+  },
+
+  activeFilter: {
+    backgroundColor: "#2563eb",
   },
 
   filterText: {
@@ -333,6 +473,10 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     marginTop: 10,
+  },
+
+  disabledButton: {
+    backgroundColor: "#94a3b8",
   },
 
   bookButton: {
