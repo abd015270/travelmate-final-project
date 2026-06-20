@@ -17,7 +17,6 @@ export default function ProfileScreen() {
   const { user, logout, updateProfile, deleteAccount } = useContext(AuthContext);
 
   const { colors, darkMode, toggleTheme } = useContext(ThemeContext);
-
   const { changeLanguage, t } = useContext(LanguageContext);
 
   const [fullName, setFullName] = useState(user?.fullName || "");
@@ -34,27 +33,24 @@ export default function ProfileScreen() {
         phone,
       });
 
-      Alert.alert("Success", "Profile updated");
+      Alert.alert(t.success, t.profileUpdated);
     } catch (error) {
-      Alert.alert(
-        "Error",
-        error.response?.data?.message || "Could not update profile"
-      );
+      Alert.alert(t.error, error.response?.data?.message || "Could not update profile");
     }
   };
 
   const handleDelete = () => {
-    Alert.alert("Delete Account", "Are you sure?", [
+    Alert.alert(t.deleteAccount, "Are you sure?", [
       {
         text: "Cancel",
       },
       {
-        text: "Delete",
+        text: t.delete,
         onPress: async () => {
           try {
             await deleteAccount();
           } catch (error) {
-            Alert.alert("Error", "Could not delete account");
+            Alert.alert(t.error, "Could not delete account");
           }
         },
       },
@@ -77,7 +73,7 @@ export default function ProfileScreen() {
           ]}
           value={fullName}
           onChangeText={setFullName}
-          placeholder="Full Name"
+          placeholder={t.fullName}
           placeholderTextColor={colors.subText}
         />
 
@@ -92,7 +88,7 @@ export default function ProfileScreen() {
           ]}
           value={email}
           onChangeText={setEmail}
-          placeholder="Email"
+          placeholder={t.email}
           placeholderTextColor={colors.subText}
         />
 
@@ -107,7 +103,7 @@ export default function ProfileScreen() {
           ]}
           value={nationalId}
           onChangeText={setNationalId}
-          placeholder="National ID"
+          placeholder={t.nationalId}
           placeholderTextColor={colors.subText}
         />
 
@@ -122,13 +118,13 @@ export default function ProfileScreen() {
           ]}
           value={phone}
           onChangeText={setPhone}
-          placeholder="Phone"
+          placeholder={t.phone}
           placeholderTextColor={colors.subText}
         />
       </View>
 
       <TouchableOpacity style={styles.updateButton} onPress={handleUpdate}>
-        <Text style={styles.buttonText}>Update Profile</Text>
+        <Text style={styles.buttonText}>{t.updateProfile}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.themeButton} onPress={toggleTheme}>
@@ -138,24 +134,15 @@ export default function ProfileScreen() {
       </TouchableOpacity>
 
       <View style={styles.languages}>
-        <TouchableOpacity
-          style={styles.langButton}
-          onPress={() => changeLanguage("en")}
-        >
+        <TouchableOpacity style={styles.langButton} onPress={() => changeLanguage("en")}>
           <Text style={styles.buttonText}>EN</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.langButton}
-          onPress={() => changeLanguage("ar")}
-        >
+        <TouchableOpacity style={styles.langButton} onPress={() => changeLanguage("ar")}>
           <Text style={styles.buttonText}>AR</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.langButton}
-          onPress={() => changeLanguage("he")}
-        >
+        <TouchableOpacity style={styles.langButton} onPress={() => changeLanguage("he")}>
           <Text style={styles.buttonText}>HE</Text>
         </TouchableOpacity>
       </View>
@@ -165,7 +152,7 @@ export default function ProfileScreen() {
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-        <Text style={styles.buttonText}>Delete Account</Text>
+        <Text style={styles.buttonText}>{t.deleteAccount}</Text>
       </TouchableOpacity>
     </View>
   );

@@ -22,7 +22,6 @@ const createBooking = async (req, res) => {
     }
 
     trip.availableSeats = trip.availableSeats - seats;
-
     await trip.save();
 
     const booking = await Booking.create({
@@ -35,13 +34,19 @@ const createBooking = async (req, res) => {
 
     const user = await User.findById(req.user._id);
 
-    await sendEmail(
-      user.email,
-      "TravelMate Booking",
-      `Your booking for ${trip.title} has been confirmed. Seats: ${seats}. Total price: ${trip.price * seats}`
-    );
+    try {
+      await sendEmail(
+        user.email,
+        "TravelMate Booking",
+        `Your booking for ${trip.title} has been confirmed. Seats: ${seats}. Total price: ${trip.price * seats}`
+      );
+    } catch (emailError) {
+      console.log("email error:", emailError.message);
+    }
 
-    res.status(201).json(booking);
+    const populatedBooking = await Booking.findById(booking._id).populate("trip");
+
+    res.status(201).json(populatedBooking);
   } catch (error) {
     res.status(400).json({
       message: error.message,
@@ -80,7 +85,6 @@ const deleteBooking = async (req, res) => {
 
     if (trip) {
       trip.availableSeats = trip.availableSeats + booking.seats;
-
       await trip.save();
     }
 

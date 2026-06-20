@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 
 import {
+  Alert,
   FlatList,
   ScrollView,
   StyleSheet,
@@ -12,10 +13,12 @@ import {
 import API from "../api/api";
 import { AuthContext } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext";
+import { LanguageContext } from "../context/LanguageContext";
 
 export default function AdminUsersScreen() {
-  const { token } = useContext(AuthContext);
+  const { token, user: currentUser } = useContext(AuthContext);
   const { colors } = useContext(ThemeContext);
+  const { t } = useContext(LanguageContext);
 
   const [users, setUsers] = useState([]);
   const [selectedData, setSelectedData] = useState(null);
@@ -52,10 +55,69 @@ export default function AdminUsersScreen() {
     }
   };
 
+  const changeRole = async (id, role) => {
+    try {
+      await API.patch(
+        `/admin/users/${id}/role`,
+        {
+          role,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      Alert.alert(t.success, "Role updated");
+
+      getUsers();
+
+      if (selectedData?.user?._id === id) {
+        getUserDetails(id);
+      }
+    } catch (error) {
+      Alert.alert(t.error, error.response?.data?.message || "Could not update role");
+    }
+  };
+
+  const deleteUser = async (id) => {
+    if (currentUser?._id === id) {
+      Alert.alert(t.error, "You cannot delete your own admin account");
+      return;
+    }
+
+    Alert.alert(t.deleteUser, "Are you sure?", [
+      {
+        text: "Cancel",
+      },
+      {
+        text: t.delete,
+        onPress: async () => {
+          try {
+            await API.delete(`/admin/users/${id}`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+
+            Alert.alert(t.success, "User deleted");
+
+            setSelectedData(null);
+
+            getUsers();
+          } catch (error) {
+            Alert.alert(t.error, error.response?.data?.message || "Could not delete user");
+          }
+        },
+      },
+    ]);
+  };
+
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.pageTitle, { color: colors.text }]}>
-        Users Management
+        {t.usersManagement}
       </Text>
 
       <FlatList
@@ -72,15 +134,15 @@ export default function AdminUsersScreen() {
             </Text>
 
             <Text style={[styles.text, { color: colors.subText }]}>
-              Email: {item.email}
+              {t.email}: {item.email}
             </Text>
 
             <Text style={[styles.text, { color: colors.subText }]}>
-              Phone: {item.phone}
+              {t.phone}: {item.phone}
             </Text>
 
             <Text style={[styles.text, { color: colors.subText }]}>
-              Role: {item.role}
+              {t.role}: {item.role}
             </Text>
           </TouchableOpacity>
         )}
@@ -89,68 +151,95 @@ export default function AdminUsersScreen() {
       {selectedData && (
         <View style={[styles.detailsBox, { backgroundColor: colors.card }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            User Details
+            {t.userDetails}
           </Text>
 
           <Text style={[styles.text, { color: colors.subText }]}>
-            Name: {selectedData.user.fullName}
+            {t.fullName}: {selectedData.user.fullName}
           </Text>
 
           <Text style={[styles.text, { color: colors.subText }]}>
-            National ID: {selectedData.user.nationalId}
+            {t.nationalId}: {selectedData.user.nationalId}
           </Text>
 
           <Text style={[styles.text, { color: colors.subText }]}>
-            Email: {selectedData.user.email}
+            {t.email}: {selectedData.user.email}
           </Text>
 
           <Text style={[styles.text, { color: colors.subText }]}>
-            Phone: {selectedData.user.phone}
+            {t.phone}: {selectedData.user.phone}
           </Text>
+
+          <Text style={[styles.text, { color: colors.subText }]}>
+            {t.role}: {selectedData.user.role}
+          </Text>
+
+          {selectedData.user.role === "admin" ? (
+            <TouchableOpacity
+              style={styles.roleButton}
+              onPress={() => changeRole(selectedData.user._id, "user")}
+            >
+              <Text style={styles.buttonText}>{t.makeUser}</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.roleButton}
+              onPress={() => changeRole(selectedData.user._id, "admin")}
+            >
+              <Text style={styles.buttonText}>{t.makeAdmin}</Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => deleteUser(selectedData.user._id)}
+          >
+            <Text style={styles.buttonText}>{t.deleteUser}</Text>
+          </TouchableOpacity>
 
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Bookings
+            {t.bookings}
           </Text>
 
           {selectedData.bookings.length === 0 ? (
             <Text style={[styles.text, { color: colors.subText }]}>
-              No bookings
+              {t.noBookings}
             </Text>
           ) : (
             selectedData.bookings.map((booking) => (
               <View key={booking._id} style={styles.smallCard}>
                 <Text style={[styles.text, { color: colors.subText }]}>
-                  Trip: {booking.trip?.title}
+                  {t.trips}: {booking.trip?.title}
                 </Text>
 
                 <Text style={[styles.text, { color: colors.subText }]}>
-                  Seats: {booking.seats}
+                  {t.seats}: {booking.seats}
                 </Text>
 
                 <Text style={[styles.text, { color: colors.subText }]}>
-                  Total: ${booking.totalPrice}
+                  {t.total}: ${booking.totalPrice}
                 </Text>
               </View>
             ))
           )}
 
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Favorites
+            {t.favorites}
           </Text>
 
           {selectedData.favorites.length === 0 ? (
             <Text style={[styles.text, { color: colors.subText }]}>
-              No favorites
+              {t.noFavorites}
             </Text>
           ) : (
             selectedData.favorites.map((favorite) => (
               <View key={favorite._id} style={styles.smallCard}>
                 <Text style={[styles.text, { color: colors.subText }]}>
-                  Trip: {favorite.trip?.title}
+                  {t.trips}: {favorite.trip?.title}
                 </Text>
 
                 <Text style={[styles.text, { color: colors.subText }]}>
-                  City: {favorite.trip?.city}
+                  {t.city}: {favorite.trip?.city}
                 </Text>
               </View>
             ))
@@ -208,5 +297,25 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     marginBottom: 8,
+  },
+
+  roleButton: {
+    backgroundColor: "#2563eb",
+    padding: 12,
+    borderRadius: 10,
+    marginTop: 12,
+  },
+
+  deleteButton: {
+    backgroundColor: "#dc2626",
+    padding: 12,
+    borderRadius: 10,
+    marginTop: 12,
+  },
+
+  buttonText: {
+    color: "white",
+    textAlign: "center",
+    fontWeight: "bold",
   },
 });

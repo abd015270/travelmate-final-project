@@ -2,6 +2,17 @@ const Favorite = require("../models/Favorite");
 
 const addFavorite = async (req, res) => {
   try {
+    const exists = await Favorite.findOne({
+      user: req.user._id,
+      trip: req.params.tripId,
+    });
+
+    if (exists) {
+      return res.status(400).json({
+        message: "trip already in favorites",
+      });
+    }
+
     const favorite = await Favorite.create({
       user: req.user._id,
       trip: req.params.tripId,
@@ -31,13 +42,19 @@ const getFavorites = async (req, res) => {
 
 const deleteFavorite = async (req, res) => {
   try {
-    await Favorite.findOneAndDelete({
+    const favorite = await Favorite.findOneAndDelete({
       user: req.user._id,
       trip: req.params.tripId,
     });
 
+    if (!favorite) {
+      return res.status(404).json({
+        message: "favorite not found",
+      });
+    }
+
     res.json({
-      message: "favorite removed",
+      message: "favorite deleted",
     });
   } catch (error) {
     res.status(400).json({

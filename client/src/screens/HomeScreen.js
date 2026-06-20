@@ -65,42 +65,27 @@ export default function HomeScreen({ navigation }) {
       </View>
 
       <View style={styles.cards}>
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => navigation.navigate(t.trips)}
-        >
+        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate(t.trips)}>
           <Text style={styles.cardText}>{t.trips}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => navigation.navigate(t.favorites)}
-        >
+        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate(t.favorites)}>
           <Text style={styles.cardText}>{t.favorites}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => navigation.navigate(t.bookings)}
-        >
+        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate(t.bookings)}>
           <Text style={styles.cardText}>{t.bookings}</Text>
         </TouchableOpacity>
 
         {user?.role === "admin" && (
-          <TouchableOpacity
-            style={styles.adminCard}
-            onPress={() => navigation.navigate("Admin")}
-          >
-            <Text style={styles.cardText}>Admin Dashboard</Text>
+          <TouchableOpacity style={styles.adminCard} onPress={() => navigation.navigate("Admin")}>
+            <Text style={styles.cardText}>{t.adminDashboard}</Text>
           </TouchableOpacity>
         )}
 
         {user?.role === "admin" && (
-          <TouchableOpacity
-            style={styles.expiredCard}
-            onPress={() => navigation.navigate("Expired")}
-          >
-            <Text style={styles.cardText}>Expired Trips</Text>
+          <TouchableOpacity style={styles.expiredCard} onPress={() => navigation.navigate("Expired")}>
+            <Text style={styles.cardText}>{t.expiredTrips}</Text>
           </TouchableOpacity>
         )}
       </View>

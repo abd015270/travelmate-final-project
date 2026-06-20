@@ -76,10 +76,10 @@ export default function TripsScreen() {
         }
       );
 
-      Alert.alert("Success", "Added to favorites");
+      Alert.alert(t.success, t.addFavorite);
       getFavorites();
     } catch (error) {
-      Alert.alert("Error", "Could not add favorite");
+      Alert.alert(t.error, "Could not add favorite");
     }
   };
 
@@ -95,11 +95,11 @@ export default function TripsScreen() {
         }
       );
 
-      Alert.alert("Success", "Trip booked");
+      Alert.alert(t.success, t.bookTrip);
       getTrips();
     } catch (error) {
       Alert.alert(
-        "Error",
+        t.error,
         error.response?.data?.message || "Could not book trip"
       );
     }
@@ -112,7 +112,7 @@ export default function TripsScreen() {
 
   const speakTrip = (trip) => {
     Speech.speak(
-      `${trip.title} in ${trip.city}. Airline ${trip.airline}. Category ${trip.category}. Departure time ${trip.departureTime}. Arrival time ${trip.arrivalTime}. Return time ${trip.returnTime}. Price ${trip.price} dollars`
+      `${trip.title}. ${trip.city}. ${trip.airline}. ${trip.category}. ${trip.price} dollars.`
     );
   };
 
@@ -126,19 +126,9 @@ export default function TripsScreen() {
 
   const checkPriceFilter = (price) => {
     if (priceFilter === "all") return true;
-
-    if (priceFilter === "low") {
-      return price >= 200 && price <= 700;
-    }
-
-    if (priceFilter === "middle") {
-      return price > 700 && price <= 1500;
-    }
-
-    if (priceFilter === "high") {
-      return price > 1500;
-    }
-
+    if (priceFilter === "low") return price >= 200 && price <= 700;
+    if (priceFilter === "middle") return price > 700 && price <= 1500;
+    if (priceFilter === "high") return price > 1500;
     return true;
   };
 
@@ -146,9 +136,7 @@ export default function TripsScreen() {
     const today = new Date();
     const returnDate = new Date(trip.returnDate);
 
-    if (returnDate < today) {
-      return false;
-    }
+    if (returnDate < today) return false;
 
     const matchesSearch =
       trip.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -168,7 +156,7 @@ export default function TripsScreen() {
       {aiSuggestion && (
         <View style={[styles.aiCard, { backgroundColor: colors.card }]}>
           <Text style={[styles.aiTitle, { color: colors.text }]}>
-            AI Suggested Trip
+            {t.aiSuggestedTrip}
           </Text>
 
           <Text style={{ color: colors.subText }}>
@@ -186,14 +174,14 @@ export default function TripsScreen() {
             borderColor: colors.border,
           },
         ]}
-        placeholder="Search by trip, city or airline..."
+        placeholder={t.searchPlaceholder}
         placeholderTextColor={colors.subText}
         value={search}
         onChangeText={setSearch}
       />
 
       <Text style={[styles.filterTitle, { color: colors.text }]}>
-        Category Filter
+        {t.categoryFilter}
       </Text>
 
       <View style={styles.filters}>
@@ -204,7 +192,7 @@ export default function TripsScreen() {
           ]}
           onPress={() => setCategoryFilter("all")}
         >
-          <Text style={styles.filterText}>All</Text>
+          <Text style={styles.filterText}>{t.all}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -214,7 +202,7 @@ export default function TripsScreen() {
           ]}
           onPress={() => setCategoryFilter("Luxury")}
         >
-          <Text style={styles.filterText}>Luxury</Text>
+          <Text style={styles.filterText}>{t.luxury}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -224,12 +212,22 @@ export default function TripsScreen() {
           ]}
           onPress={() => setCategoryFilter("Adventure")}
         >
-          <Text style={styles.filterText}>Adventure</Text>
+          <Text style={styles.filterText}>{t.adventure}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            categoryFilter === "Standard" && styles.activeFilter,
+          ]}
+          onPress={() => setCategoryFilter("Standard")}
+        >
+          <Text style={styles.filterText}>{t.standard}</Text>
         </TouchableOpacity>
       </View>
 
       <Text style={[styles.filterTitle, { color: colors.text }]}>
-        Price Filter
+        {t.priceFilter}
       </Text>
 
       <View style={styles.priceFilters}>
@@ -240,7 +238,7 @@ export default function TripsScreen() {
           ]}
           onPress={() => setPriceFilter("all")}
         >
-          <Text style={styles.filterText}>All</Text>
+          <Text style={styles.filterText}>{t.all}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -291,43 +289,47 @@ export default function TripsScreen() {
               </Text>
 
               <Text style={[styles.text, { color: colors.subText }]}>
-                {item.city}, {item.country}
+                {t.city}: {item.city}
               </Text>
 
               <Text style={[styles.text, { color: colors.subText }]}>
-                Airline: {item.airline}
+                {t.country}: {item.country}
               </Text>
 
               <Text style={[styles.text, { color: colors.subText }]}>
-                Category: {item.category}
+                {t.airline}: {item.airline}
               </Text>
 
               <Text style={[styles.text, { color: colors.subText }]}>
-                Departure Date: {new Date(item.departureDate).toDateString()}
+                {t.category}: {item.category}
               </Text>
 
               <Text style={[styles.text, { color: colors.subText }]}>
-                Departure Time: {item.departureTime}
+                {t.departureDate}: {new Date(item.departureDate).toDateString()}
               </Text>
 
               <Text style={[styles.text, { color: colors.subText }]}>
-                Arrival Time: {item.arrivalTime}
+                {t.departureTime}: {item.departureTime}
               </Text>
 
               <Text style={[styles.text, { color: colors.subText }]}>
-                Return Date: {new Date(item.returnDate).toDateString()}
+                {t.arrivalTime}: {item.arrivalTime}
               </Text>
 
               <Text style={[styles.text, { color: colors.subText }]}>
-                Return Time: {item.returnTime}
+                {t.returnDate}: {new Date(item.returnDate).toDateString()}
               </Text>
 
               <Text style={[styles.text, { color: colors.subText }]}>
-                Days: {item.days}
+                {t.returnTime}: {item.returnTime}
               </Text>
 
               <Text style={[styles.text, { color: colors.subText }]}>
-                Seats: {item.availableSeats}
+                {t.days}: {item.days}
+              </Text>
+
+              <Text style={[styles.text, { color: colors.subText }]}>
+                {t.seats}: {item.availableSeats}
               </Text>
 
               <Text style={styles.price}>${item.price}</Text>
@@ -341,7 +343,7 @@ export default function TripsScreen() {
                 disabled={isFavorite}
               >
                 <Text style={styles.buttonText}>
-                  {isFavorite ? "In Favorites" : t.addFavorite}
+                  {isFavorite ? t.inFavorites : t.addFavorite}
                 </Text>
               </TouchableOpacity>
 
@@ -356,14 +358,14 @@ export default function TripsScreen() {
                 style={styles.mapButton}
                 onPress={() => openMap(item)}
               >
-                <Text style={styles.buttonText}>Open Map</Text>
+                <Text style={styles.buttonText}>{t.openMap}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.voiceButton}
                 onPress={() => speakTrip(item)}
               >
-                <Text style={styles.buttonText}>Voice</Text>
+                <Text style={styles.buttonText}>{t.voice}</Text>
               </TouchableOpacity>
             </View>
           );
@@ -374,10 +376,7 @@ export default function TripsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 15,
-  },
+  container: { flex: 1, padding: 15 },
 
   aiCard: {
     padding: 15,
@@ -405,7 +404,8 @@ const styles = StyleSheet.create({
 
   filters: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 8,
     marginBottom: 15,
   },
 
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#64748b",
     padding: 10,
     borderRadius: 10,
-    width: "30%",
+    minWidth: "23%",
   },
 
   priceButton: {
