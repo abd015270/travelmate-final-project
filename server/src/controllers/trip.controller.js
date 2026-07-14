@@ -1,110 +1,135 @@
 const Trip = require("../models/Trip");
 
-const createTrip = async (req, res) => {
-  try {
-    const trip = await Trip.create(req.body);
-    res.status(201).json(trip);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+const getIsraelNow = () => {
+  const now = new Date();
+
+  return new Date(
+    now.toLocaleString("en-US", {
+      timeZone: "Asia/Jerusalem",
+    })
+  );
+};
+
+const buildTripDateTime = (date, time) => {
+  const tripDate = new Date(date);
+  const datePart = tripDate.toISOString().split("T")[0];
+
+  return new Date(`${datePart}T${time || "00:00"}:00`);
+};
+
+const getCategory = (price, days) => {
+  if (Number(days) >= 30) {
+    return "Adventure";
   }
+
+  if (Number(price) > 1000) {
+    return "Luxury";
+  }
+
+  return "Standard";
 };
 
 const getTrips = async (req, res) => {
   try {
-    const today = new Date();
+    const nowIsrael = getIsraelNow();
 
-    let filter = {
-      returnDate: {
-        $gte: today,
-      },
-    };
+    const allTrips = await Trip.find().sort({ departureDate: 1 });
 
-    if (req.query.city) filter.city = req.query.city;
-    if (req.query.category) filter.category = req.query.category;
-    if (req.query.airline) filter.airline = req.query.airline;
+    const activeTrips = allTrips.filter((trip) => {
+      const tripDateTime = buildTripDateTime(
+        trip.departureDate,
+        trip.departureTime
+      );
 
-    if (req.query.search) {
-      filter.$or = [
-        { title: { $regex: req.query.search, $options: "i" } },
-        { city: { $regex: req.query.search, $options: "i" } },
-        { airline: { $regex: req.query.search, $options: "i" } },
-      ];
-    }
+      return tripDateTime > nowIsrael;
+    });
 
-    let trips = Trip.find(filter);
-
-    if (req.query.sort === "price") {
-      trips = trips.sort({ price: 1 });
-    }
-
-    if (req.query.skip) {
-      trips = trips.skip(parseInt(req.query.skip));
-    }
-
-    if (req.query.limit) {
-      trips = trips.limit(parseInt(req.query.limit));
-    }
-
-    const result = await trips.select("-__v");
-    res.json(result);
+    res.json(activeTrips);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 
-const getAdminTrips = async (req, res) => {
+const getAllTripsForAdmin = async (req, res) => {
   try {
-    const trips = await Trip.find().sort({ departureDate: 1 });
+    const trips = await Trip.find().sort({ createdAt: -1 });
+
     res.json(trips);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 
 const getExpiredTrips = async (req, res) => {
   try {
-    const today = new Date();
+    const nowIsrael = getIsraelNow();
 
-    const trips = await Trip.find({
-      returnDate: {
-        $lt: today,
-      },
-    }).sort({ returnDate: -1 });
+    const allTrips = await Trip.find().sort({ departureDate: -1 });
 
-    res.json(trips);
+    const expiredTrips = allTrips.filter((trip) => {
+      const tripDateTime = buildTripDateTime(
+        trip.departureDate,
+        trip.departureTime
+      );
+
+      return tripDateTime <= nowIsrael;
+    });
+
+    res.json(expiredTrips);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 
-const getTripById = async (req, res) => {
+const createTrip = async (req, res) => {
   try {
-    const trip = await Trip.findById(req.params.id);
+    const tripData = {
+      ...req.body,
+      category: getCategory(req.body.price, req.body.days),
+    };
 
-    if (!trip) {
-      return res.status(404).json({ message: "trip not found" });
-    }
+    const trip = await Trip.create(tripData);
 
-    res.json(trip);
+    res.status(201).json(trip);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({
+      message: error.message,
+    });
   }
 };
 
 const updateTrip = async (req, res) => {
   try {
-    const trip = await Trip.findByIdAndUpdate(req.params.id, req.body, {
+    const updatedData = {
+      ...req.body,
+    };
+
+    if (req.body.price || req.body.days) {
+      updatedData.category = getCategory(req.body.price, req.body.days);
+    }
+
+    const trip = await Trip.findByIdAndUpdate(req.params.id, updatedData, {
       new: true,
       runValidators: true,
     });
 
     if (!trip) {
-      return res.status(404).json({ message: "trip not found" });
+      return res.status(404).json({
+        message: "trip not found",
+      });
     }
 
     res.json(trip);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({
+      message: error.message,
+    });
   }
 };
 
@@ -113,57 +138,41 @@ const deleteTrip = async (req, res) => {
     const trip = await Trip.findByIdAndDelete(req.params.id);
 
     if (!trip) {
-      return res.status(404).json({ message: "trip not found" });
+      return res.status(404).json({
+        message: "trip not found",
+      });
     }
 
-    res.json({ message: "trip deleted" });
+    res.json({
+      message: "trip deleted",
+    });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({
+      message: error.message,
+    });
   }
 };
 
 const deleteAllTrips = async (req, res) => {
   try {
-    await Trip.deleteMany({});
+    await Trip.deleteMany();
 
     res.json({
       message: "all trips deleted",
     });
   } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
-
-const getTripStats = async (req, res) => {
-  try {
-    const stats = await Trip.aggregate([
-      {
-        $group: {
-          _id: "$category",
-          count: { $sum: 1 },
-          averagePrice: { $avg: "$price" },
-          maxPrice: { $max: "$price" },
-          minPrice: { $min: "$price" },
-        },
-      },
-      { $sort: { averagePrice: 1 } },
-      { $limit: 10 },
-    ]);
-
-    res.json(stats);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({
+      message: error.message,
+    });
   }
 };
 
 module.exports = {
-  createTrip,
   getTrips,
-  getAdminTrips,
+  getAllTripsForAdmin,
   getExpiredTrips,
-  getTripById,
+  createTrip,
   updateTrip,
   deleteTrip,
   deleteAllTrips,
-  getTripStats,
 };

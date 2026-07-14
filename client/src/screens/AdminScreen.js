@@ -12,15 +12,18 @@ import {
 } from "react-native";
 
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { Picker } from "@react-native-picker/picker";
 
 import API from "../api/api";
 import cities from "../data/cities";
 import { AuthContext } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext";
+import { LanguageContext } from "../context/LanguageContext";
 
 export default function AdminScreen() {
   const { token } = useContext(AuthContext);
   const { colors } = useContext(ThemeContext);
+  const { t } = useContext(LanguageContext);
 
   const [trips, setTrips] = useState([]);
   const [editId, setEditId] = useState(null);
@@ -50,16 +53,12 @@ export default function AdminScreen() {
     getTrips();
   }, []);
 
-  const formatPickedDate = (date) => {
-    return date.toISOString().split("T")[0];
-  };
+  const formatPickedDate = (date) => date.toISOString().split("T")[0];
 
   const getTrips = async () => {
     try {
       const response = await API.get("/trips/admin/all", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       setTrips(response.data);
@@ -76,7 +75,6 @@ export default function AdminScreen() {
 
   const chooseCity = (selectedCity) => {
     const selectedData = cities.find((item) => item.city === selectedCity);
-
     if (!selectedData) return;
 
     setCity(selectedData.city);
@@ -119,7 +117,6 @@ export default function AdminScreen() {
 
   const calculateTime = (time, hours) => {
     const parts = time.split(":");
-
     if (parts.length !== 2) return "";
 
     let hour = Number(parts[0]);
@@ -228,7 +225,7 @@ export default function AdminScreen() {
         !lat ||
         !lng
       ) {
-        Alert.alert("Error", "Please fill all fields");
+        Alert.alert(t.error, t.fillAllFields);
         return;
       }
 
@@ -254,61 +251,53 @@ export default function AdminScreen() {
 
       if (editId) {
         await API.patch(`/trips/${editId}`, tripData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
-        Alert.alert("Success", "Trip updated");
+        Alert.alert(t.success, t.tripUpdated);
       } else {
         await API.post("/trips", tripData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
-        Alert.alert("Success", "Trip added");
+        Alert.alert(t.success, t.tripAdded);
       }
 
       clearForm();
       getTrips();
     } catch (error) {
-      Alert.alert("Error", error.response?.data?.message || "Could not save trip");
+      Alert.alert(t.error, error.response?.data?.message || t.couldNotSaveTrip);
     }
   };
 
   const deleteTrip = async (id) => {
     try {
       await API.delete(`/trips/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      Alert.alert("Success", "Trip deleted");
+      Alert.alert(t.success, t.tripDeleted);
       getTrips();
     } catch (error) {
-      Alert.alert("Error", "Could not delete trip");
+      Alert.alert(t.error, t.couldNotDeleteTrip);
     }
   };
 
   const deleteAllTrips = async () => {
-    Alert.alert("Delete All Trips", "Are you sure?", [
-      { text: "Cancel" },
+    Alert.alert(t.deleteAllTrips, t.areYouSure, [
+      { text: t.cancel },
       {
-        text: "Delete",
+        text: t.delete,
         onPress: async () => {
           try {
             await API.delete("/trips/admin/all", {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
+              headers: { Authorization: `Bearer ${token}` },
             });
 
-            Alert.alert("Success", "All trips deleted");
+            Alert.alert(t.success, t.allTripsDeleted);
             getTrips();
           } catch (error) {
-            Alert.alert("Error", "Could not delete all trips");
+            Alert.alert(t.error, t.couldNotDeleteAllTrips);
           }
         },
       },
@@ -320,28 +309,37 @@ export default function AdminScreen() {
       style={[styles.container, { backgroundColor: colors.background }]}
     >
       <Text style={[styles.title, { color: colors.text }]}>
-        Admin Dashboard
+        {t.adminDashboard}
       </Text>
 
       <TouchableOpacity style={styles.deleteAllButton} onPress={deleteAllTrips}>
-        <Text style={styles.buttonText}>Delete All Trips</Text>
+        <Text style={styles.buttonText}>{t.deleteAllTrips}</Text>
       </TouchableOpacity>
 
-      <Text style={[styles.label, { color: colors.text }]}>Choose City</Text>
+      <Text style={[styles.label, { color: colors.text }]}>{t.chooseCity}</Text>
 
-      <View style={styles.cityButtons}>
-        {cities.map((item) => (
-          <TouchableOpacity
-            key={item.city}
-            style={[
-              styles.cityButton,
-              city === item.city && styles.selectedCityButton,
-            ]}
-            onPress={() => chooseCity(item.city)}
-          >
-            <Text style={styles.buttonText}>{item.city}</Text>
-          </TouchableOpacity>
-        ))}
+      <View
+        style={[
+          styles.pickerBox,
+          {
+            backgroundColor: colors.card,
+            borderColor: colors.border,
+          },
+        ]}
+      >
+        <Picker
+          selectedValue={city}
+          onValueChange={(value) => {
+            if (value) chooseCity(value);
+          }}
+          style={{ color: colors.text }}
+        >
+          <Picker.Item label={t.selectCity} value="" />
+
+          {cities.map((item) => (
+            <Picker.Item key={item.city} label={item.city} value={item.city} />
+          ))}
+        </Picker>
       </View>
 
       <TextInput
@@ -349,34 +347,34 @@ export default function AdminScreen() {
           styles.input,
           { backgroundColor: colors.card, color: colors.text },
         ]}
-        placeholder="Trip Title"
+        placeholder={t.tripTitle}
         placeholderTextColor={colors.subText}
         value={title}
         onChangeText={setTitle}
       />
 
       <Text style={[styles.autoText, { color: colors.subText }]}>
-        City: {city || "auto"}
+        {t.city}: {city || t.auto}
       </Text>
 
       <Text style={[styles.autoText, { color: colors.subText }]}>
-        Country: {country || "auto"}
+        {t.country}: {country || t.auto}
       </Text>
 
       <Text style={[styles.autoText, { color: colors.subText }]}>
-        Airline: {airline || "auto"}
+        {t.airline}: {airline || t.auto}
       </Text>
 
       <Text style={[styles.autoText, { color: colors.subText }]}>
-        Latitude: {lat || "auto"}
+        {t.latitude}: {lat || t.auto}
       </Text>
 
       <Text style={[styles.autoText, { color: colors.subText }]}>
-        Longitude: {lng || "auto"}
+        {t.longitude}: {lng || t.auto}
       </Text>
 
       <Text style={[styles.autoText, { color: colors.subText }]}>
-        Image: {image ? "auto image selected" : "auto"}
+        {image ? t.autoImageSelected : t.auto}
       </Text>
 
       <TextInput
@@ -384,7 +382,7 @@ export default function AdminScreen() {
           styles.input,
           { backgroundColor: colors.card, color: colors.text },
         ]}
-        placeholder="Price"
+        placeholder={t.price}
         placeholderTextColor={colors.subText}
         value={price}
         onChangeText={setPrice}
@@ -392,7 +390,7 @@ export default function AdminScreen() {
       />
 
       <Text style={[styles.autoText, { color: colors.subText }]}>
-        Category: {getCategory()}
+        {t.category}: {getCategory()}
       </Text>
 
       <TouchableOpacity
@@ -400,7 +398,7 @@ export default function AdminScreen() {
         onPress={() => setShowDeparturePicker(true)}
       >
         <Text style={{ color: departureDate ? colors.text : colors.subText }}>
-          {departureDate || "Departure Date"}
+          {departureDate || t.departureDate}
         </Text>
       </TouchableOpacity>
 
@@ -411,10 +409,7 @@ export default function AdminScreen() {
           display="default"
           onChange={(event, selectedDate) => {
             setShowDeparturePicker(false);
-
-            if (selectedDate) {
-              handleDepartureDatePick(selectedDate);
-            }
+            if (selectedDate) handleDepartureDatePick(selectedDate);
           }}
         />
       )}
@@ -424,7 +419,7 @@ export default function AdminScreen() {
         onPress={() => setShowReturnPicker(true)}
       >
         <Text style={{ color: returnDate ? colors.text : colors.subText }}>
-          {returnDate || "Return Date"}
+          {returnDate || t.returnDate}
         </Text>
       </TouchableOpacity>
 
@@ -435,16 +430,13 @@ export default function AdminScreen() {
           display="default"
           onChange={(event, selectedDate) => {
             setShowReturnPicker(false);
-
-            if (selectedDate) {
-              handleReturnDatePick(selectedDate);
-            }
+            if (selectedDate) handleReturnDatePick(selectedDate);
           }}
         />
       )}
 
       <Text style={[styles.autoText, { color: colors.subText }]}>
-        Days: {days || "auto"}
+        {t.days}: {days || t.auto}
       </Text>
 
       <TextInput
@@ -452,18 +444,18 @@ export default function AdminScreen() {
           styles.input,
           { backgroundColor: colors.card, color: colors.text },
         ]}
-        placeholder="Departure Time: 09:30"
+        placeholder={`${t.departureTime}: 09:30`}
         placeholderTextColor={colors.subText}
         value={departureTime}
         onChangeText={handleDepartureTime}
       />
 
       <Text style={[styles.autoText, { color: colors.subText }]}>
-        Arrival Time: {arrivalTime || "auto"}
+        {t.arrivalTime}: {arrivalTime || t.auto}
       </Text>
 
       <Text style={[styles.autoText, { color: colors.subText }]}>
-        Return Time: {returnTime || "auto"}
+        {t.returnTime}: {returnTime || t.auto}
       </Text>
 
       <TextInput
@@ -471,7 +463,7 @@ export default function AdminScreen() {
           styles.input,
           { backgroundColor: colors.card, color: colors.text },
         ]}
-        placeholder="Available Seats"
+        placeholder={t.availableSeats}
         placeholderTextColor={colors.subText}
         value={availableSeats}
         onChangeText={setAvailableSeats}
@@ -480,13 +472,13 @@ export default function AdminScreen() {
 
       <TouchableOpacity style={styles.saveButton} onPress={saveTrip}>
         <Text style={styles.buttonText}>
-          {editId ? "Update Trip" : "Add Trip"}
+          {editId ? t.updateTrip : t.addTrip}
         </Text>
       </TouchableOpacity>
 
       {editId && (
         <TouchableOpacity style={styles.cancelButton} onPress={clearForm}>
-          <Text style={styles.buttonText}>Cancel Edit</Text>
+          <Text style={styles.buttonText}>{t.cancelEdit}</Text>
         </TouchableOpacity>
       )}
 
@@ -501,46 +493,54 @@ export default function AdminScreen() {
             </Text>
 
             <Text style={{ color: colors.subText }}>
-              {item.city}, {item.country}
+              {t.city}: {item.city}
             </Text>
 
             <Text style={{ color: colors.subText }}>
-              Airline: {item.airline}
+              {t.country}: {item.country}
             </Text>
 
             <Text style={{ color: colors.subText }}>
-              Category: {item.category}
+              {t.airline}: {item.airline}
             </Text>
 
-            <Text style={{ color: colors.subText }}>Days: {item.days}</Text>
+            <Text style={{ color: colors.subText }}>
+              {t.category}: {item.category}
+            </Text>
 
             <Text style={{ color: colors.subText }}>
-              Departure: {item.departureDate?.slice(0, 10)} -{" "}
+              {t.days}: {item.days}
+            </Text>
+
+            <Text style={{ color: colors.subText }}>
+              {t.departureDate}: {item.departureDate?.slice(0, 10)} -{" "}
               {item.departureTime}
             </Text>
 
             <Text style={{ color: colors.subText }}>
-              Arrival: {item.arrivalTime}
+              {t.arrivalTime}: {item.arrivalTime}
             </Text>
 
             <Text style={{ color: colors.subText }}>
-              Return Time: {item.returnTime}
+              {t.returnTime}: {item.returnTime}
             </Text>
 
-            <Text style={styles.price}>${item.price}</Text>
+            <Text style={styles.price}>
+              {t.price}: ${item.price}
+            </Text>
 
             <TouchableOpacity
               style={styles.editButton}
               onPress={() => fillForm(item)}
             >
-              <Text style={styles.buttonText}>Edit</Text>
+              <Text style={styles.buttonText}>{t.edit}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.deleteButton}
               onPress={() => deleteTrip(item._id)}
             >
-              <Text style={styles.buttonText}>Delete</Text>
+              <Text style={styles.buttonText}>{t.delete}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -567,21 +567,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
-  cityButtons: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 15,
-  },
-
-  cityButton: {
-    backgroundColor: "#2563eb",
-    padding: 10,
+  pickerBox: {
+    borderWidth: 1,
     borderRadius: 10,
-  },
-
-  selectedCityButton: {
-    backgroundColor: "#16a34a",
+    marginBottom: 15,
+    overflow: "hidden",
   },
 
   input: {

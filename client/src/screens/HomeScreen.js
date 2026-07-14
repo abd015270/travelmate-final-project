@@ -65,15 +65,15 @@ export default function HomeScreen({ navigation }) {
       </View>
 
       <View style={styles.cards}>
-        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate(t.trips)}>
+        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("Trips")}>
           <Text style={styles.cardText}>{t.trips}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate(t.favorites)}>
+        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("Favorites")}>
           <Text style={styles.cardText}>{t.favorites}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate(t.bookings)}>
+        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("Bookings")}>
           <Text style={styles.cardText}>{t.bookings}</Text>
         </TouchableOpacity>
 

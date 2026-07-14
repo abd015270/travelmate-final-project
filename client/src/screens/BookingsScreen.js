@@ -52,7 +52,7 @@ export default function BookingsScreen() {
       Alert.alert(t.success, t.deleteBooking);
       getBookings();
     } catch (error) {
-      Alert.alert(t.error, "Could not delete booking");
+      Alert.alert(t.error, t.couldNotDeleteBooking);
     }
   };
 
@@ -73,7 +73,10 @@ export default function BookingsScreen() {
             </Text>
 
             <Text style={[styles.text, { color: colors.subText }]}>
-              {item.trip?.city}, {item.trip?.country}
+              {t.city}: {item.trip?.city}
+            </Text>
+            <Text style={[styles.text, { color: colors.subText }]}>
+             {t.country}: {item.trip?.country}
             </Text>
 
             <Text style={[styles.text, { color: colors.subText }]}>

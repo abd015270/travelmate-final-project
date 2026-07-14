@@ -52,7 +52,7 @@ export default function FavoritesScreen() {
       Alert.alert(t.success, t.deleteFavorite);
       getFavorites();
     } catch (error) {
-      Alert.alert(t.error, "Could not delete favorite");
+     Alert.alert(t.error, t.couldNotDeleteFavorite);
     }
   };
 
@@ -73,14 +73,20 @@ export default function FavoritesScreen() {
             </Text>
 
             <Text style={[styles.text, { color: colors.subText }]}>
-              {item.trip?.city}, {item.trip?.country}
+              {t.city}: {item.trip?.city}
+            </Text>
+
+            <Text style={[styles.text, { color: colors.subText }]}>
+              {t.country}: {item.trip?.country}
             </Text>
 
             <Text style={[styles.text, { color: colors.subText }]}>
               {t.airline}: {item.trip?.airline}
             </Text>
 
-            <Text style={styles.price}>${item.trip?.price}</Text>
+            <Text style={styles.price}>
+              {t.price}: ${item.trip?.price}
+            </Text>
 
             <TouchableOpacity
               style={styles.deleteButton}

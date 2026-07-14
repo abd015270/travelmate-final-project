@@ -6,34 +6,26 @@ const protect = require("../middlewares/auth.middleware");
 const adminOnly = require("../middlewares/admin.middleware");
 
 const {
-  createTrip,
   getTrips,
-  getAdminTrips,
+  getAllTripsForAdmin,
   getExpiredTrips,
-  getTripById,
+  createTrip,
   updateTrip,
   deleteTrip,
   deleteAllTrips,
-  getTripStats,
 } = require("../controllers/trip.controller");
 
 router.get("/", getTrips);
 
-router.get("/admin/all", protect, adminOnly, getAdminTrips);
+router.get("/admin/all", protect, adminOnly, getAllTripsForAdmin);
 
 router.get("/expired/list", protect, adminOnly, getExpiredTrips);
 
-router.get("/stats/summary", getTripStats);
-
-router.delete("/admin/all", protect, adminOnly, deleteAllTrips);
-
-router.get("/:id", getTripById);
-
 router.post("/", protect, adminOnly, createTrip);
 
-router.put("/:id", protect, adminOnly, updateTrip);
-
 router.patch("/:id", protect, adminOnly, updateTrip);
+
+router.delete("/admin/all", protect, adminOnly, deleteAllTrips);
 
 router.delete("/:id", protect, adminOnly, deleteTrip);
 

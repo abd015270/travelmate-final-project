@@ -1,11 +1,7 @@
-import {
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useContext, useEffect,useState } from "react";
 
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
   Image,
@@ -34,7 +30,9 @@ export default function TripsScreen() {
 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [priceFilter, setPriceFilter] = useState("all");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     getTrips();
@@ -43,10 +41,14 @@ export default function TripsScreen() {
 
   const getTrips = async () => {
     try {
+      setLoading(true);
+
       const response = await API.get("/trips");
       setTrips(response.data);
     } catch (error) {
       console.log(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -76,10 +78,10 @@ export default function TripsScreen() {
         }
       );
 
-      Alert.alert(t.success, t.addFavorite);
+      Alert.alert(t.success, t.favoriteAdded);
       getFavorites();
     } catch (error) {
-      Alert.alert(t.error, "Could not add favorite");
+      Alert.alert(t.error, t.couldNotAddFavorite);
     }
   };
 
@@ -95,12 +97,12 @@ export default function TripsScreen() {
         }
       );
 
-      Alert.alert(t.success, t.bookTrip);
+      Alert.alert(t.success, t.bookingCreated);
       getTrips();
     } catch (error) {
       Alert.alert(
         t.error,
-        error.response?.data?.message || "Could not book trip"
+        error.response?.data?.message || t.couldNotBookTrip
       );
     }
   };
@@ -116,27 +118,30 @@ export default function TripsScreen() {
     );
   };
 
-  const aiSuggestion = useMemo(() => {
-    if (trips.length === 0) return null;
+  const checkPriceRange = (price) => {
+    const min = minPrice ? Number(minPrice) : null;
+    const max = maxPrice ? Number(maxPrice) : null;
 
-    return trips.reduce((best, trip) => {
-      return trip.price < best.price ? trip : best;
-    });
-  }, [trips]);
+    if (min !== null && price < min) return false;
+    if (max !== null && price > max) return false;
 
-  const checkPriceFilter = (price) => {
-    if (priceFilter === "all") return true;
-    if (priceFilter === "low") return price >= 200 && price <= 700;
-    if (priceFilter === "middle") return price > 700 && price <= 1500;
-    if (priceFilter === "high") return price > 1500;
     return true;
   };
 
-  const filteredTrips = trips.filter((trip) => {
-    const today = new Date();
-    const returnDate = new Date(trip.returnDate);
+  const clearPriceFilter = () => {
+    setMinPrice("");
+    setMaxPrice("");
+  };
 
-    if (returnDate < today) return false;
+  const filteredTrips = trips.filter((trip) => {
+    const today = new Date("2026-07-06");
+     today.setHours(0, 0, 0, 0);
+
+    const departureDate = new Date(trip.departureDate);
+      departureDate.setHours(0, 0, 0, 0);
+
+    if (departureDate < today) return false;
+    if (trip.availableSeats <= 0) return false;
 
     const matchesSearch =
       trip.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -146,25 +151,26 @@ export default function TripsScreen() {
     const matchesCategory =
       categoryFilter === "all" ? true : trip.category === categoryFilter;
 
-    const matchesPrice = checkPriceFilter(Number(trip.price));
+    const matchesPrice = checkPriceRange(Number(trip.price));
 
     return matchesSearch && matchesCategory && matchesPrice;
   });
 
+  if (loading) {
+    return (
+      <View
+        style={[
+          styles.loadingContainer,
+          { backgroundColor: colors.background },
+        ]}
+      >
+        <ActivityIndicator size="large" color="#2563eb" />
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {aiSuggestion && (
-        <View style={[styles.aiCard, { backgroundColor: colors.card }]}>
-          <Text style={[styles.aiTitle, { color: colors.text }]}>
-            {t.aiSuggestedTrip}
-          </Text>
-
-          <Text style={{ color: colors.subText }}>
-            {aiSuggestion.title} - ${aiSuggestion.price}
-          </Text>
-        </View>
-      )}
-
       <TextInput
         style={[
           styles.searchInput,
@@ -230,51 +236,52 @@ export default function TripsScreen() {
         {t.priceFilter}
       </Text>
 
-      <View style={styles.priceFilters}>
-        <TouchableOpacity
+      <View style={styles.priceInputs}>
+        <TextInput
           style={[
-            styles.priceButton,
-            priceFilter === "all" && styles.activeFilter,
+            styles.priceInput,
+            {
+              backgroundColor: colors.card,
+              color: colors.text,
+              borderColor: colors.border,
+            },
           ]}
-          onPress={() => setPriceFilter("all")}
-        >
-          <Text style={styles.filterText}>{t.all}</Text>
-        </TouchableOpacity>
+          placeholder={t.minPrice}
+          placeholderTextColor={colors.subText}
+          value={minPrice}
+          onChangeText={setMinPrice}
+          keyboardType="numeric"
+        />
 
-        <TouchableOpacity
+        <TextInput
           style={[
-            styles.priceButton,
-            priceFilter === "low" && styles.activeFilter,
+            styles.priceInput,
+            {
+              backgroundColor: colors.card,
+              color: colors.text,
+              borderColor: colors.border,
+            },
           ]}
-          onPress={() => setPriceFilter("low")}
-        >
-          <Text style={styles.filterText}>$200-$700</Text>
-        </TouchableOpacity>
+          placeholder={t.maxPrice}
+          placeholderTextColor={colors.subText}
+          value={maxPrice}
+          onChangeText={setMaxPrice}
+          keyboardType="numeric"
+        />
 
-        <TouchableOpacity
-          style={[
-            styles.priceButton,
-            priceFilter === "middle" && styles.activeFilter,
-          ]}
-          onPress={() => setPriceFilter("middle")}
-        >
-          <Text style={styles.filterText}>$700-$1500</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.priceButton,
-            priceFilter === "high" && styles.activeFilter,
-          ]}
-          onPress={() => setPriceFilter("high")}
-        >
-          <Text style={styles.filterText}>$1500+</Text>
+        <TouchableOpacity style={styles.clearButton} onPress={clearPriceFilter}>
+          <Text style={styles.buttonText}>{t.clear}</Text>
         </TouchableOpacity>
       </View>
 
       <FlatList
         data={filteredTrips}
         keyExtractor={(item) => item._id}
+        ListEmptyComponent={
+          <Text style={[styles.empty, { color: colors.subText }]}>
+            {t.noTripsFound}
+          </Text>
+        }
         renderItem={({ item }) => {
           const isFavorite = favorites.some(
             (fav) => fav.trip?._id === item._id
@@ -305,7 +312,8 @@ export default function TripsScreen() {
               </Text>
 
               <Text style={[styles.text, { color: colors.subText }]}>
-                {t.departureDate}: {new Date(item.departureDate).toDateString()}
+                {t.departureDate}:{" "}
+                {new Date(item.departureDate).toLocaleDateString()}
               </Text>
 
               <Text style={[styles.text, { color: colors.subText }]}>
@@ -317,7 +325,8 @@ export default function TripsScreen() {
               </Text>
 
               <Text style={[styles.text, { color: colors.subText }]}>
-                {t.returnDate}: {new Date(item.returnDate).toDateString()}
+                {t.returnDate}:{" "}
+                {new Date(item.returnDate).toLocaleDateString()}
               </Text>
 
               <Text style={[styles.text, { color: colors.subText }]}>
@@ -328,11 +337,22 @@ export default function TripsScreen() {
                 {t.days}: {item.days}
               </Text>
 
-              <Text style={[styles.text, { color: colors.subText }]}>
+              <Text
+                style={[
+                  styles.text,
+                  {
+                    color:
+                      item.availableSeats <= 3 ? "#dc2626" : colors.subText,
+                    fontWeight: item.availableSeats <= 3 ? "bold" : "normal",
+                  },
+                ]}
+              >
                 {t.seats}: {item.availableSeats}
               </Text>
 
-              <Text style={styles.price}>${item.price}</Text>
+              <Text style={styles.price}>
+                {t.price}: ${item.price}
+              </Text>
 
               <TouchableOpacity
                 style={[
@@ -347,12 +367,14 @@ export default function TripsScreen() {
                 </Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.bookButton}
-                onPress={() => bookTrip(item._id)}
-              >
-                <Text style={styles.buttonText}>{t.bookTrip}</Text>
-              </TouchableOpacity>
+              {item.availableSeats > 0 && (
+                <TouchableOpacity
+                  style={styles.bookButton}
+                  onPress={() => bookTrip(item._id)}
+                >
+                  <Text style={styles.buttonText}>{t.bookTrip}</Text>
+                </TouchableOpacity>
+              )}
 
               <TouchableOpacity
                 style={styles.mapButton}
@@ -376,17 +398,15 @@ export default function TripsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 15 },
-
-  aiCard: {
+  container: {
+    flex: 1,
     padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
   },
 
-  aiTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   searchInput: {
@@ -409,24 +429,11 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
 
-  priceFilters: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 15,
-  },
-
   filterButton: {
     backgroundColor: "#64748b",
     padding: 10,
     borderRadius: 10,
     minWidth: "23%",
-  },
-
-  priceButton: {
-    backgroundColor: "#64748b",
-    padding: 10,
-    borderRadius: 10,
   },
 
   activeFilter: {
@@ -437,6 +444,26 @@ const styles = StyleSheet.create({
     color: "white",
     textAlign: "center",
     fontWeight: "bold",
+  },
+
+  priceInputs: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 15,
+  },
+
+  priceInput: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+
+  clearButton: {
+    backgroundColor: "#64748b",
+    padding: 12,
+    borderRadius: 10,
+    justifyContent: "center",
   },
 
   card: {
@@ -504,5 +531,11 @@ const styles = StyleSheet.create({
     color: "white",
     textAlign: "center",
     fontWeight: "bold",
+  },
+
+  empty: {
+    textAlign: "center",
+    marginTop: 40,
+    fontSize: 18,
   },
 });

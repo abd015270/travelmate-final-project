@@ -1,4 +1,5 @@
 import { useContext, useState } from "react";
+
 import {
   Alert,
   StyleSheet,
@@ -23,13 +24,13 @@ export default function LoginScreen({ navigation }) {
   const handleLogin = async () => {
     try {
       if (!email || !password) {
-        Alert.alert("Error", "Please fill all fields");
+        Alert.alert(t.error, t.fillAllFields);
         return;
       }
 
       await login(email, password);
     } catch (error) {
-      Alert.alert("Error", error.response?.data?.message || "Login failed");
+      Alert.alert(t.error, error.response?.data?.message || t.loginFailed);
     }
   };
 
@@ -50,6 +51,7 @@ export default function LoginScreen({ navigation }) {
         placeholderTextColor={colors.subText}
         value={email}
         onChangeText={setEmail}
+        keyboardType="email-address"
       />
 
       <TextInput
@@ -83,15 +85,24 @@ export default function LoginScreen({ navigation }) {
       </TouchableOpacity>
 
       <View style={styles.languages}>
-        <TouchableOpacity style={styles.langButton} onPress={() => changeLanguage("en")}>
+        <TouchableOpacity
+          style={styles.langButton}
+          onPress={() => changeLanguage("en")}
+        >
           <Text style={styles.buttonText}>EN</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.langButton} onPress={() => changeLanguage("ar")}>
+        <TouchableOpacity
+          style={styles.langButton}
+          onPress={() => changeLanguage("ar")}
+        >
           <Text style={styles.buttonText}>AR</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.langButton} onPress={() => changeLanguage("he")}>
+        <TouchableOpacity
+          style={styles.langButton}
+          onPress={() => changeLanguage("he")}
+        >
           <Text style={styles.buttonText}>HE</Text>
         </TouchableOpacity>
       </View>
